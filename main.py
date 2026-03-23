@@ -1,12 +1,12 @@
-# TOKEN = "8587067195:AAGHkvTWJLQMgtjE4GOsHqlT24SUm-xC620"  #TOKEN NATAN
+
 import telebot
 import requests
 from telebot import types # Import necessário para os botões
 from bs4 import BeautifulSoup
 from datetime import datetime
 import re
- 
-TOKEN = "8739648889:AAFcisb8DcLRRPhI4AaLBsEYcfA64Cu9sRA" # TOKEN LEONARDO
+TOKEN = "INSERIR_TOKEN_AQUI" 
+
 bot = telebot.TeleBot(TOKEN)
 
 # --- FUNÇÃO DE SCRAPING (CORRIGIDA) ---
