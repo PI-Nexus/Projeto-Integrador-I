@@ -1,15 +1,20 @@
-
+import threading
+from flask import Flask
+import os
 import telebot
 import requests
 from telebot import types # Import necessário para os botões
 from bs4 import BeautifulSoup
 from datetime import datetime
 import re
-TOKEN = "INSERIR_TOKEN_AQUI" 
+from dotenv import load_dotenv
 
+load_dotenv()
+
+TOKEN = os.getenv('TOKEN_BOT')
 bot = telebot.TeleBot(TOKEN)
 
-# --- FUNÇÃO DE SCRAPING (CORRIGIDA) ---
+# --- FUNÇÃO DE SCRAPING (MANTIDA) ---
 def scrap(grupo_id):
     url = 'https://www.gov.br/saude/pt-br/vacinacao/calendario'
     try:
@@ -32,171 +37,111 @@ def scrap(grupo_id):
             vacinas_html = bloco.select('ul.servicos-segundo-nivel .menu')
             for item in vacinas_html:
                 titulo_tag = item.find('p', class_='vacina__titulo')
-
                 if titulo_tag:
                     dose_interna = titulo_tag.find('span', class_='vacina__dose')
-                    if dose_interna:
-                        dose_texto = dose_interna.extract().get_text(strip=True)
-                    else:
-                        dose_texto = "Dose única/Reforço"
-                    
+                    dose_texto = dose_interna.extract().get_text(strip=True) if dose_interna else "Dose única/Reforço"
                     nome_vacina = titulo_tag.get_text(strip=True)
-                    # Criando o objeto JSON (Dicionário)
+                    
                     lista_vacinas.append({
                         "grupo": nome_grupo,
                         "periodo": nome_periodo,
                         "vacina": nome_vacina,
                         "dose" : dose_texto
-                        #"dose": dose_tag.get_text(strip=True) if dose_tag else "Dose única/Reforço"
                     })
         return lista_vacinas
     except Exception as e:
         print(f"Erro no scraping: {e}")
         return None
-    
+
+# --- FORMATAÇÃO (MANTIDA) ---
 def formatar_mensagem_bot(dados_json):
     if dados_json is None:
         return "❌ Erro ao acessar o site do Ministério da Saúde."
     if not dados_json:
         return "⚠️ Nenhuma informação encontrada para esta categoria."
 
-    # Cabeçalho usando o primeiro item para pegar o nome do grupo
     texto = f"💉 *CALENDÁRIO: {dados_json[0]['grupo'].upper()}*\n"
     texto += "________________________________\n\n"
 
     periodo_atual = ""
     for item in dados_json:
-        # Se mudou o período (ex: de 'Ao nascer' para '2 meses'), adiciona o subtítulo
         if item['periodo'] != periodo_atual:
             periodo_atual = item['periodo']
             texto += f"\n📍 *{periodo_atual}*\n"
-        
-        # Adiciona a vacina e a dose
         texto += f"  • {item['vacina']} _{item['dose']}_\n"
 
     return texto
 
-# --- HANDLERS DO BOT ---
+# --- HANDLERS ---
 
 @bot.message_handler(commands=['start', 'help'])
-def start(msg):
+def start(msg: telebot.types.Message):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     markup.add('Início', 'Vacinas', 'Help')
-    bot.send_message(msg.chat.id, 'Olá, sou o bot Gotinha! Clique no botão abaixo para começar.', reply_markup=markup)
-
-@bot.message_handler(func=lambda msg: msg.text == "Vacinas")
-def pedir_idade(msg):
-    # Opção Calendário Completo ou Calendário Até Hoje
-    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Calendário Completo', 'Calendário Até Hoje')
-    bot.send_message(msg.chat.id, "Você deseja ver o calendário completo do seu grupo ou apenas o que já deveria ter tomado até hoje?", reply_markup=markup)
-    bot.register_next_step_handler(msg, processar_opcao)
-
-    #sent_msg = bot.reply_to(msg, "Digite a data de nascimento formatada: [dd/mm/aaaa]")
-    #bot.register_next_step_handler(sent_msg, processar_idade)
-
-def processar_opcao(msg):
-    opcao = msg.text
-    
-    # Se o usuário clicar em "Início" ou "Help" no meio do processo, nós paramos o fluxo de vacinas
-    if opcao in ['Início', 'Help']:
-        if opcao == 'Início': resposta_inicio(msg)
-        else: resposta_help(msg)
-        return
-
-    if opcao not in ['Calendário Completo', 'Calendário Até Hoje']:
-        bot.reply_to(msg, "⚠️ Por favor, use apenas os botões do menu.")
-        # Em vez de chamar pedir_idade, enviamos apenas a instrução de novo
-        return pedir_idade(msg)
-
-    sent_msg = bot.send_message(
-        msg.chat.id, 
-        f"✅ {opcao} selecionado.\n\nDigite a data de nascimento [dd/mm/aaaa]:", 
-        reply_markup=types.ReplyKeyboardRemove()
-    )
-    bot.register_next_step_handler(sent_msg, processar_idade, opcao)
-
-def processar_idade(msg, opcao):
-    # Se o usuário desistir e clicar em um comando de barra (ex: /start)
-    if msg.text.startswith('/'):
-        bot.clear_step_handler_by_chat_id(chat_id=msg.chat.id)
-        return start(msg)
-
-    data_texto = msg.text
-    try:
-        hoje = datetime.now()
-        data_nasc = datetime.strptime(data_texto, "%d/%m/%Y")
-        
-        # Lógica de idade...
-        idade = hoje.year - data_nasc.year - ((hoje.month, hoje.day) < (data_nasc.month, data_nasc.day))
-        idade_meses = (hoje.year - data_nasc.year) * 12 + (hoje.month - data_nasc.month)
-        if hoje.day < data_nasc.day: idade_meses -= 1
-        
-    except ValueError:
-        sent_msg = bot.reply_to(msg, "❌ Data inválida! Use o formato dia/mês/ano (ex: 20/05/2010):")
-        return bot.register_next_step_handler(sent_msg, processar_idade, opcao)
-
-    # Segue para o scraping...
-    if idade <= 10: id_site = "crianca"
-    elif 11 <= idade <= 19: id_site = "adolescente"
-    elif 20 <= idade <= 59: id_site = "adulto"
-    else: id_site = "idoso"
-
-    bot.send_message(msg.chat.id, "🔎 Consultando banco de dados oficial... ⏳")
-    
-    dados_json = scrap(id_site)
-    if opcao == "Calendário Até Hoje":
-        dados_json = filtrar_por_idade(dados_json, idade_meses, idade, id_site)
-    
-    resultado = formatar_mensagem_bot(dados_json)
-    bot.send_message(msg.chat.id, resultado, parse_mode="Markdown")
-    
-    # Restaura o menu principal
-    markup_menu = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup_menu.add('Início', 'Vacinas', 'Help')
-    bot.send_message(msg.chat.id, "O que deseja fazer agora?", reply_markup=markup_menu)
-
-def filtrar_por_idade(dados, meses_usuario, anos_usuario, id_site):
-    dados_filtrados = []
-    
-    for item in dados:
-        periodo = item['periodo'].lower()
-        
-        # 1. Busca todos os números no texto (ex: "9 a 14" vira [9, 14])
-        numeros = re.findall(r'\d+', periodo)
-        valores = [int(n) for n in numeros]
-        
-        # Se for criança e o período menciona "meses"
-        if "mes" in periodo and id_site == "crianca":
-            if not valores or meses_usuario >= valores[0]:
-                dados_filtrados.append(item)
-            continue
-
-        # Se houver um intervalo (ex: "9 a 14 anos")
-        if len(valores) >= 2 and "ano" in periodo:
-            minimo, maximo = valores[0], valores[1]
-            if minimo <= anos_usuario <= maximo:
-                dados_filtrados.append(item)
-        
-        # Se houver apenas um número (ex: "15 anos" ou "aos 10 anos")
-        elif len(valores) == 1 and "ano" in periodo:
-            if anos_usuario >= valores[0]:
-                dados_filtrados.append(item)
-        
-        # Casos especiais: "Ao nascer" ou períodos sem números
-        elif "nascer" in periodo or not valores:
-            dados_filtrados.append(item)
-            
-    return dados_filtrados
+    bot.send_message(msg.chat.id, 'Olá, sou o seu assistente virtual! Selecione uma opção abaixo.', reply_markup=markup)
 
 @bot.message_handler(func=lambda msg: msg.text == "Início")
 def resposta_inicio(msg):
-    bot.reply_to(msg, "Como posso te ajudar?")
+    bot.reply_to(msg, "Você está no início do assistente virtual! Estou aqui para te ajudar a encontrar as vacinas disponíveis para você. Selecione 'Vacinas' para começar.")
+
+@bot.message_handler(func=lambda msg: msg.text == "Vacinas")
+def pedir_data_nascimento(msg):
+    sent_msg = bot.reply_to(msg, "Para consultar as vacinas disponíveis, informe a data de nascimento da pessoa no formato DD/MM/AAAA.")
+    bot.register_next_step_handler(sent_msg, processar_data)
+
+def processar_data(msg):
+    data_texto = msg.text
+    try:
+        data_nascimento = datetime.strptime(data_texto, "%d/%m/%Y")
+        hoje = datetime.now()
+        idade = hoje.year - data_nascimento.year - ((hoje.month, hoje.day) < (data_nascimento.month, data_nascimento.day))
+
+        if idade < 0:
+            bot.reply_to(msg, "A data está inválida! Por favor, selecione uma data real!'.")
+            return
+
+        # --- Mapeamento para o Scraping ---
+        if idade <= 10:
+            id_site = "crianca"
+            faixa_amigavel = "Criança"
+        elif 11 <= idade <= 19:
+            id_site = "adolescente"
+            faixa_amigavel = "Adolescente"
+        elif 20 <= idade <= 59:
+            id_site = "adulto"
+            faixa_amigavel = "Adulto"
+        else:
+            id_site = "idoso"
+            faixa_amigavel = "Idoso"
+
+        bot.send_message(msg.chat.id, f"✅ Grupo: {faixa_amigavel} ({idade} anos).\n⌛ Buscando informações oficiais...")
+
+        # --- Chamada do Scraping ---
+        dados_vacinas = scrap(id_site)
+        mensagem_final = formatar_mensagem_bot(dados_vacinas)
+        
+        # Enviar com parse_mode para aceitar o negrito/itálico do Markdown
+        bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown")
+                                  
+    except ValueError:
+        bot.reply_to(msg, "Formato inválido! Use DD/MM/AAAA.")
 
 @bot.message_handler(func=lambda msg: msg.text == "Help")
 def resposta_help(msg):
-    bot.reply_to(msg, "Eu ajudo você a consultar o calendário de vacinação oficial. Clique em 'Vacinas' e informe a idade.")
+    bot.reply_to(msg, "Para obter ajuda, acesse: \nhttps://LinkDoSite.")
+    #Obs: fazer um site simples em html/css/js para melhorar a experiencia do usuário e suprir dúvidas
 
-#print(scrap("crianca"))
-print("Bot iniciado...")
-bot.infinity_polling()
+
+app = Flask('')
+@app.route('/')
+def home():
+    return "Bot Gotinha está online ! ✅"
+def run():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0',port=port)
+
+if __name__ == "__main__":
+    t = threading.Thread(target=run)
+    t.start()
+    print("Bot iniciando...")
+    bot.infinity_polling()
