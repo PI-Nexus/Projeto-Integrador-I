@@ -1,5 +1,7 @@
-import telebot
+import threading
+from flask import Flask
 import os
+import telebot
 from telebot import types
 from datetime import datetime
 from dotenv import load_dotenv
@@ -130,5 +132,17 @@ def fornece_grupo(msg):
         bot.reply_to(msg,'Não encontramos dados para esse grupo.')
 
 
+app = Flask('')
+@app.route('/')
+def home():
+    return "Bot Gotinha está online ! ✅"
+def run():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0',port=port)
 
-bot.infinity_polling()
+if __name__ == "__main__":
+    t = threading.Thread(target=run)
+    t.start()
+    print("Bot iniciando...")
+    bot.infinity_polling()
+
