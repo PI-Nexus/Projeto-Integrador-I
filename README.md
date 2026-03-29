@@ -14,7 +14,7 @@ A base de dados é obtida via scraping de `https://www.gov.br/saude/pt-br/vacina
 2. Busque por `@Gotinha_bot` ou escaneie o QrCode abaixo.
 
 <p align="center">
-  <img src="assets/img/qr-code-telegram.png" alt="QR Code do bot" width="200" />
+  <img src="assets/img/qr-code-telegram.png" alt="QR Code do bot" width="220" />
 </p>
 
 3. Digite `/start` ou `/help`.
@@ -95,22 +95,53 @@ Saída típica:
 
 ---
 
-## 8. Conclusão
+## Manual de Instalação
 
-O bot tem como objetivo facilitar o acesso às informações sobre vacinação de forma simples, rápida e acessível através da interface do Telegram.
+A seguir, o passo a passo completo para instalar e executar o bot localmente.
 
-### Padrão de Mensagens de Commit
+### 1.1 Requisitos mínimos
+- Python 3.9 ou superior instalado
+- Conexão de internet ativa
+- Token do bot do Telegram (`BOT_TOKEN`) (criado com o BotFather)
 
-| Tipo | Descrição | Exemplo de Uso |
-| :--- | :--- | :--- |
-| **`<feat>`** | Adição de um novo recurso ou funcionalidade. | `feat (AB-1243, AB-56): Implementação dos repositories usados nas operações com as tabelas de variações climáticas` |
-| **`<fix>`** | Correção de um erro (bug). | `fix (#45): Correção do componente de seleção de município` |
-| **`<docs>`** | Atualização ou criação de documentação. | `docs (#45): inclusão de diagrama de modelo de BD para a aplicação` |
-| **`<style>`** | Mudanças de formatação/estética que não afetam a lógica. | `style (AB-1243, AB-56): ajuste de nomes de variáveis para o padrão camelCase` |
-| **`<refactor>`** | Refatoração de código que não altera a funcionalidade final. | `refactor (ID): limpeza de funções redundantes no controller` |
-| **`<test>`** | Adiciona ou modifica testes. | `test (ID): criação de testes para validação de login` |
-| **`<chore>`** | Atualizações menores que não impactam a funcionalidade. | `chore (ID): atualização de dependências do npm` |
+### 1.2 Instalação
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/PI-Nexus/Projeto-Integrador-I.git
+   cd Projeto-Integrador-I
+   ```
+2. Instale as dependências (deve ter `pip` instalado):
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Configure o token do bot no arquivo `.env` na raiz:
+   ```ini
+   TOKEN_BOT=seu_token_aqui
+   PORT=8080
+   ```
+4. Crie a pasta de dados caso ainda não exista:
+   ```bash
+   mkdir data
+   ```
+
+### 1.3 Executando
+```bash
+python main.py
+```
+Verifique no console se aparece: `Bot iniciando...`.
+
+### 1.4 Teste rápido
+- No Telegram, abra `@Gotinha_bot`.
+- Envie `/start`.
+- Selecione `Vacinas` e escolha `Grupo` ou `Idade`.
+
+### 1.5 Problemas comuns
+- `telebot.apihelper.ApiTelegramException` → token inválido ou firewall.
+- `ModuleNotFoundError` → ambiente virtual não ativado ou dependências faltando.
+- `FileNotFoundError: data/scrap.txt` → execute o script `scrap.py`.
 
 ---
 
-**Estrutura do comando:** `git commit -m "<tipo> (<id_demanda1>, <id_demanda2>): <descrição da entrega>"`
+## Conclusão
+
+O bot tem como objetivo facilitar o acesso às informações sobre vacinação de forma simples, rápida e acessível através da interface do Telegram.
