@@ -1,12 +1,14 @@
 import threading
-from flask import Flask
-import os
 import telebot
+import os
 from telebot import types
 from datetime import datetime
 from dotenv import load_dotenv
+from telebot.types import ReplyKeyboardRemove
+from flask import Flask
 from src.auxiliares import plural
-from src.scrap import formatar_mensagem_bot,scrap
+from src.scrap import formatar_mensagem_bot, scrap
+import shutil
 
 load_dotenv()
 
@@ -16,11 +18,13 @@ bot = telebot.TeleBot(TOKEN)
 # --- HANDLERS ---
 
 @bot.message_handler(commands=['start', 'help'])
-def start(msg: telebot.types.Message):
+def comandos(msg):
+    servicos(msg)
+
+def servicos(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     markup.add('Início', 'Vacinas', 'Help')
     bot.send_message(msg.chat.id, 'Olá, sou o seu assistente virtual! Selecione uma opção abaixo.', reply_markup=markup)
-
 
 @bot.message_handler(func=lambda msg: msg.text == "Início")
 def resposta_inicio(msg):
@@ -29,22 +33,37 @@ def resposta_inicio(msg):
 
 
 @bot.message_handler(func=lambda msg: msg.text == "Help")
-def resposta_help(msg):
+def help_message(msg):
     bot.reply_to(msg, "Para obter ajuda, acesse: \nhttps://LinkDoSite.")
     # Obs: fazer um site simples em html/css/js para melhorar a experiencia do usuário e suprir dúvidas
 
+@bot.message_handler(func=lambda msg : msg.text =="Continuar")
+def menu(msg):
+    servicos(msg)
+
+@bot.message_handler(func=lambda msg: msg.text == "Encerrar")
+def finalizar_servico(msg):
+    final_message="✅ Atendimento finalizado!\nCuide da sua saúde e mantenha sua vacinação em dia 💉\nAté logo! 👋"
+    bot.send_message(msg.chat.id,final_message,reply_markup=ReplyKeyboardRemove())
+    try:
+        shutil.rmtree('data')
+    except ValueError :
+        print('Não foi possível apagar o diretório ')
+
+
+
 @bot.message_handler(func=lambda msg: msg.text == "Vacinas")
-def pedir_modelo_pesquisa(msg):
+def filtrar_pesquisa(msg):
     markup=types.ReplyKeyboardMarkup(row_width=1,resize_keyboard=True)
     markup.add('Grupo','Idade')
     bot.send_message(msg.chat.id,"Como deseja filtrar sua pesquisa ? ",reply_markup=markup)
 
 @bot.message_handler(func=lambda msg: msg.text == "Idade")
-def pedir_data_nascimento(msg):
-    sent_msg = bot.reply_to(msg, "Informe a data de nascimento da pessoa no formato DD/MM/AAAA.")
-    bot.register_next_step_handler(sent_msg, processar_data)
+def pegar_idade(msg):
+    bot.send_message(msg.chat.id,"Informe a data de nascimento da pessoa no formato DD/MM/AAAA.",reply_markup=ReplyKeyboardRemove())
+    bot.register_next_step_handler(msg, processar_dados)
 
-def processar_data(msg):
+def processar_dados(msg):
     sub_faixa =[]
     data_texto = msg.text
 
@@ -107,29 +126,36 @@ def processar_data(msg):
 
         # Enviar com parse_mode para aceitar o negrito/itálico do Markdown
         bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown")
+        servico_final(msg)
 
     except ValueError:
         bot.reply_to(msg, "Formato inválido! Use DD/MM/AAAA.")
 
 @bot.message_handler(func=lambda msg: msg.text=="Grupo")
-def opcoes_grupo(msg):
+def grupos(msg):
     markup=types.ReplyKeyboardMarkup(row_width=1,resize_keyboard=True)
     markup.add("Crianca","Adolescente","Adulto","Idoso","Gestante")
     sent_msg=bot.send_message(msg.chat.id,'Informe o grupo para pesquisa.',reply_markup=markup)
-    bot.register_next_step_handler(sent_msg,fornece_grupo)
+    bot.register_next_step_handler(sent_msg,enviar_grupos)
 
 
-def fornece_grupo(msg):
+def enviar_grupos(msg):
     id_site=msg.text.lower()
     dados_vacinais = scrap(id_site)
     mensagem_final = formatar_mensagem_bot(dados_vacinais)
     try :
 
-        bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown",reply_markup=types.ReplyKeyboardRemove())
+        bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown",reply_markup=ReplyKeyboardRemove())
+        servico_final(msg)
 
 
     except ValueError:
         bot.reply_to(msg,'Não encontramos dados para esse grupo.')
+
+def servico_final(msg):
+    markup=types.ReplyKeyboardMarkup(row_width=1,resize_keyboard=True)
+    markup.add('Encerrar','Continuar')
+    bot.send_message(msg.chat.id,'Sua pesquisa chegou ao fim. Deseja continuar ?',reply_markup=markup)
 
 
 app = Flask('')
@@ -145,4 +171,5 @@ if __name__ == "__main__":
     t.start()
     print("Bot iniciando...")
     bot.infinity_polling()
+
 

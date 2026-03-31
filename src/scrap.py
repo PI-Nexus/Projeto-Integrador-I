@@ -1,18 +1,24 @@
+
+
+import os
 from bs4 import BeautifulSoup
 import requests
 
 
 def save_as_file():
+    os.makedirs('data',exist_ok=True)
     url = 'https://www.gov.br/saude/pt-br/vacinacao/calendario'
     response = requests.get(url, timeout=10)
     with open('data/scrap.txt','w',encoding='utf-8') as my_file:
         my_file.write(str(response.text))
 
+
+
 # --- FUNÇÃO DE SCRAPING (MANTIDA) ---
 
 def scrap(grupo_id,periodo:list | None = None):
-
     try:
+        save_as_file()
         with open('data/scrap.txt', 'r', encoding='utf-8') as scrap_file:
             container = scrap_file.read()
             if not container:
@@ -83,3 +89,4 @@ def formatar_mensagem_bot(dados_json):
 
 
     return texto
+
