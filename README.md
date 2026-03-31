@@ -49,7 +49,22 @@ A base de dados é obtida via scraping de `https://www.gov.br/saude/pt-br/vacina
 
 ---
 
-## 2. Iniciando
+## 2. Personas e Dores Atendidas
+
+### 👤 Personas
+* **Mariana (Mãe de primeira viagem):** Tem dificuldade em memorizar o calendário intenso de vacinas do bebê nos primeiros meses de vida.
+* **Lucas (Jovem Adulto):** Não sabe quais vacinas de reforço deve tomar após sair da idade escolar.
+* **Sr. José (Idoso):** Busca um canal direto para saber sobre doses específicas para sua idade sem navegar em sites complexos.
+* **Clara (Gestante):** Precisa de clareza sobre quais imunizantes são obrigatórios e seguros durante a gestação.
+
+### 🩹 Dores que o Bot Resolve
+* **Complexidade de Dados:** O site oficial apresenta tabelas extensas; o bot filtra e entrega apenas o que é relevante para o perfil consultado.
+* **Cálculo de Faixa Etária:** Automatiza a conversão de "Data de Nascimento" para faixas de meses ou anos, evitando erros de interpretação do usuário.
+* **Acessibilidade:** Transforma uma busca técnica em uma conversa intuitiva, facilitando o acesso à saúde pública.
+
+---
+
+## 3. Iniciando
 1. Abra o Telegram.
 2. Busque por `@Gotinha_bot` ou escaneie o QrCode abaixo.
 
@@ -62,13 +77,13 @@ A base de dados é obtida via scraping de `https://www.gov.br/saude/pt-br/vacina
 
 ---
 
-## 3. Fluxo principal de uso
-### 3.1 Menu inicial
+## 4. Fluxo principal de uso
+### 4.1 Menu inicial
 - `Início`: mensagem de boas-vindas e instruções rápidas.
 - `Help`: link de suporte (`https://LinkDoSite`).
 - `Vacinas`: início da consulta de imunização.
 
-### 3.2 Consulta por Grupo
+### 4.2 Consulta por Grupo
 1. Clique em `Vacinas`.
 2. Escolha `Grupo`.
 3. Selecione um dos grupos de pesquisa:
@@ -79,7 +94,7 @@ A base de dados é obtida via scraping de `https://www.gov.br/saude/pt-br/vacina
    - `Gestante`
 4. O bot responde com calendário e todas as vacinas listadas por período.
 
-### 3.3 Consulta por Idade (Data de Nascimento)
+### 4.3 Consulta por Idade (Data de Nascimento)
 1. Clique em `Vacinas`.
 2. Selecione `Idade`.
 3. Informe data de nascimento no formato `DD/MM/AAAA`.
@@ -92,7 +107,7 @@ A base de dados é obtida via scraping de `https://www.gov.br/saude/pt-br/vacina
 
 ---
 
-## 4. Resultado esperado
+## 5. Resultado esperado
 Depois de qualquer consulta o bot devolve:
 - Título identificando o grupo (`💉 CALENDÁRIO: ...`).
 - Periodização clara (`📍 [período]`).
@@ -106,7 +121,7 @@ Mensagens de erro/tratamento:
 
 ---
 
-## 5. Observações do usuário
+## 6. Observações do usuário
 - O bot precisa estar em execução para responder às mensagens.
 - Use formato de data válido: `DD/MM/AAAA`.
 - Se o resultado for vazio, tente outra alternativa (`Grupo` ou `Idade`).
@@ -114,7 +129,7 @@ Mensagens de erro/tratamento:
 
 ---
 
-## 6. Exemplo de Uso
+## 7. Exemplo de Uso
 
 **`/start`**
 1. Escolha `Vacinas`.
@@ -147,41 +162,5 @@ A seguir, o passo a passo completo para instalar e executar o bot localmente.
 ### 1.2 Instalação
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/PI-Nexus/Projeto-Integrador-I.git
+   git clone [https://github.com/PI-Nexus/Projeto-Integrador-I.git](https://github.com/PI-Nexus/Projeto-Integrador-I.git)
    cd Projeto-Integrador-I
-   ```
-2. Instale as dependências (deve ter `pip` instalado):
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Configure o token do bot no arquivo `.env` na raiz:
-   ```ini
-   TOKEN_BOT=seu_token_aqui
-   PORT=8080
-   ```
-4. Crie a pasta de dados caso ainda não exista:
-   ```bash
-   mkdir data
-   ```
-
-### 1.3 Executando
-```bash
-python main.py
-```
-Verifique no console se aparece: `Bot iniciando...`.
-
-### 1.4 Teste rápido
-- No Telegram, abra `@Gotinha_bot`.
-- Envie `/start`.
-- Selecione `Vacinas` e escolha `Grupo` ou `Idade`.
-
-### 1.5 Problemas comuns
-- `telebot.apihelper.ApiTelegramException` → token inválido ou firewall.
-- `ModuleNotFoundError` → ambiente virtual não ativado ou dependências faltando.
-- `FileNotFoundError: data/scrap.txt` → execute o script `scrap.py`.
-
----
-
-## Conclusão
-
-O bot tem como objetivo facilitar o acesso às informações sobre vacinação de forma simples, rápida e acessível através da interface do Telegram.
