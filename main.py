@@ -5,8 +5,8 @@ import telebot
 from telebot import types
 from datetime import datetime
 from dotenv import load_dotenv
-from auxiliares import plural
-from scrap import formatar_mensagem_bot,scrap
+from src.auxiliares import plural
+from src.scrap import formatar_mensagem_bot,scrap
 
 load_dotenv()
 
