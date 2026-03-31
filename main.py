@@ -13,6 +13,9 @@ load_dotenv()
 TOKEN = os.getenv('TOKEN_BOT')
 bot = telebot.TeleBot(TOKEN)
 
+if not TOKEN:
+    raise ValueError("Token do bot não definido no .env!")
+
 # --- HANDLERS ---
 
 @bot.message_handler(commands=['start', 'help'])
@@ -61,38 +64,49 @@ def processar_data(msg):
         idadeMes=int(idadeDias/30)
 
         # --- Mapeamento para o Scraping ---
-
-        if idadeMes<=15:
-            id_site='crianca'
-            for chave,valor in faixa_crianca_meses.items():  # confere se está  no intervalo da tupla de sub faixas
-                minimo=valor[0]
-                maximo=valor[1]
+        # --- Crianças até 15 meses ---
+        if idadeMes <= 15:
+            id_site = 'crianca'
+            sub_faixa = None
+            for chave, valor in faixa_crianca_meses.items():
+                minimo, maximo = valor
                 if minimo <= idadeDias <= maximo:
-                    sub_faixa.append(chave)
+                    sub_faixa = chave
+                    break  # Pega apenas a primeira faixa que bate
 
-        elif idadeMes>15 and idadeAnos<=14:
+        # --- Crianças 15 meses a 14 anos ---
+        elif idadeMes > 15 and idadeAnos <= 14:
             id_site = "crianca"
+            sub_faixa = None
             for chave, valor in faixa_crianca_anos.items():
-                minimo=valor[0]
-                maximo=valor[1]
-                if minimo<=idadeMes<=maximo:
-                    sub_faixa.append(chave)
-            if len(sub_faixa)==0:
-                sub_faixa.append(list(faixa_crianca_anos.keys())[0]) #  retorna o primeiro elemento de faixa_crianca_anos (casos entre 15 meses e 4 anos seriam nulos ))
+                minimo, maximo = valor
+                if minimo <= idadeMes <= maximo:
+                    sub_faixa = chave
+                    break
+                if not sub_faixa:
+                    sub_faixa = list(faixa_crianca_anos.keys())[0]
 
-        elif 14<idadeAnos<= 24:
+        # --- Adolescentes 14 a 24 anos ---
+        elif 14 < idadeAnos <= 24:
             id_site = "adolescente"
-            # maiores de 14 recebem somente faixa de 10 a 24 anos
+            sub_faixa = None
             for chave, valor in faixa_adolescente.items():
-                minimo = valor[0]
-                maximo = valor[1]
+                minimo, maximo = valor
                 if minimo <= idadeAnos <= maximo:
-                    sub_faixa.append(chave)
+                    sub_faixa = chave
+                    break
 
-        elif 25 <= idadeAnos<= 59:
+        # --- Adultos 25 a 59 anos ---
+        elif 25 <= idadeAnos <= 59:
             id_site = "adulto"
+            sub_faixa = None
+
+        # --- Idosos 60+ ---
         else:
             id_site = "idoso"
+            sub_faixa = None
+        # --- Crianças até 15 meses ---
+
 
 
 
