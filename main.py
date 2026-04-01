@@ -13,9 +13,6 @@ load_dotenv()
 TOKEN = os.getenv('TOKEN_BOT')
 bot = telebot.TeleBot(TOKEN)
 
-if not TOKEN:
-    raise ValueError("Token do bot não definido no .env!")
-
 # --- HANDLERS ---
 
 @bot.message_handler(commands=['start', 'help'])
