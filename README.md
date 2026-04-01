@@ -1,147 +1,81 @@
-# Manual do Usuário — Bot de Vacinação
+# Assitente de dados públicos da saúde para vacinação
 
-## 1. Visão Geral
-O bot de vacinação (`@Gotinha_bot`) é um assistente Telegram para consulta rápida de calendários vacinais do Ministério da Saúde com base em:
-- Seleção de grupo (Criança, Adolescente, Adulto, Idoso, Gestante)
-- Pesquisa por data de nascimento (idade atual)
+## Tema do Semestre: 
+Desenvolvimento de Aplicação com Lógica Algorítmica em Análise de Dados (sem Persistência de Dados)
 
-A base de dados é obtida via scraping de `https://www.gov.br/saude/pt-br/vacinacao/calendario` e armazenada em `data/scrap.txt`. Se o arquivo não existir ou estiver vazio, o bot carrega automaticamente os dados mais recentes.
+## Conhecimentos Ensinados
+- Elaborar Documentação de Software (artefatos de processo ágil; manual do produto);
+- Empregar Processo de Desenvolvimento Ágil – Scrum (adaptação da API);
+- Desenvolver solução computacional usando Lógica Algorítmica.
 
----
 
-## 2. Iniciando
-1. Abra o Telegram.
-2. Busque por `@Gotinha_bot` ou escaneie o QrCode abaixo.
+# Descrição do Desafio
+Desenvolver um assistente virtual que use dados de portais públicos oficiais de saúde sobre vacinação para informar o cidadão sobre calendário para diferentes faixas etárias (crianças, adultos, idosos...), coberturas vacinais em diferentes regiões brasileiras e demais informações sobre o tema disponíveis (integrar com plataformas altamente usadas como telegram, usar linguagem natural para a interação além de comandos e até voz como uma alexa são grandes diferenciais. Mas ressalta-se que tudo isso precisa ser feito através de programação sem utilizar APIs externas)
 
-<p align="center">
-  <img src="assets/img/qr-code-telegram.png" alt="QR Code do bot" width="220" />
-</p>
+# Índice
+* [Equipe](#Equipe)
+* [Objetivo do Projeto](#objetivo-do-projeto)
+* [Backlog do produto](#Backlog-do-Produto)
+* [Registro das Sprints](#Registro-das-Sprints)
 
-3. Digite `/start` ou `/help`.
-4. Bot exibirá teclado com opções principais: `Início`, `Vacinas`, `Help`.
+# Equipe
+|    Função     | Nome                                  |                                                                                                                                                      LinkedIn & GitHub                                                                                                                                                      |
+| :-----------: | :------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| Product Owner |   Natan Telles         |     [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/natan-telles-5b2970288) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/natan-telles)              |
+| Scrum Master  | Davi Couto |      [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/davi-couto-do-nascimento-7604343a6/) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/DaviCouto-gd)     |
+| Team Member   | Daniel Oliveira              |         [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/daniel-oliveira-alexandre-753a063bb) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/oliveiraalexandredaniel-lgtm)        |
+|  Team Member  | Eduardo Cabral                 |         [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/eduardo-vital-cabral-529499312/) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/edu-cabral)        |
+|  Team Member  | Enzo Francisquetto                 |   [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/enzofrancisquetto-018377356) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/francisquettoenzo)   |
+|  Team Member  | Isaac Ferraz       |           [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/isaacferraz1311) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/isaac-ferraz)   | 
+|  Team Member  | Leonardo Gabriel       |           [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/leonardo-gabriel-dos-santos-79b848329) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/Leonardo-gabsantos) |
+|  Team Member  | Renan Ramos       |           [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/renan-ramos-a520662a2) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/renandevcode) |
+|  Team Member  | Yago Moraes       |           [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/yago-moraes) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/YagoRGM) 
 
----
+# Objetivo do Projeto
+O objetivo do projeto é desenvolver um assistente virtual que use dados de portais públicos de saúde sobre vacinação, visando:
+- Informar o usuário sobre vacinas e seus calendários com base na faixa etária/grupo (crianças, adolescentes, adultos, idosos e gestantes);
+- Trazer coberturas vacinais para diferentes regiões brasileiras;
+- Outras informações relacionadas ao tema.
 
-## 3. Fluxo principal de uso
-### 3.1 Menu inicial
-- `Início`: mensagem de boas-vindas e instruções rápidas.
-- `Help`: link de suporte (`https://LinkDoSite`).
-- `Vacinas`: início da consulta de imunização.
-
-### 3.2 Consulta por Grupo
-1. Clique em `Vacinas`.
-2. Escolha `Grupo`.
-3. Selecione um dos grupos de pesquisa:
-   - `Crianca` (todas as idades da categoria infantil)
-   - `Adolescente`
-   - `Adulto`
-   - `Idoso`
-   - `Gestante`
-4. O bot responde com calendário e todas as vacinas listadas por período.
-
-### 3.3 Consulta por Idade (Data de Nascimento)
-1. Clique em `Vacinas`.
-2. Selecione `Idade`.
-3. Informe data de nascimento no formato `DD/MM/AAAA`.
-4. O bot calcula idade em dias/meses/anos e identifica o grupo mais apropriado:
-   - `crianca` (0 a ~15 meses ou 4-14 anos, com subfaixas de meses/anos)
-   - `adolescente` (9 a 24 anos, mapeando faixas específicas)
-   - `adulto` (25 a 59 anos)
-   - `idoso` (60+ anos)
-5. A resposta traz o calendário filtrado, com vacina, dose e período.
+O foco do projeto é o algoritmo, sem o uso de persistência de dados (Banco de Dados).
 
 ---
 
-## 4. Resultado esperado
-Depois de qualquer consulta o bot devolve:
-- Título identificando o grupo (`💉 CALENDÁRIO: ...`).
-- Periodização clara (`📍 [período]`).
-- Lista de vacinas com doses, ex:
-  - `• Vacina X _Dose única_`
+## Tecnologias
 
-Mensagens de erro/tratamento:
-- `⚠️ Nenhuma informação encontrada para esta categoria.`
-- `❌ Erro ao acessar o site do Ministério da Saúde.`
-- `Formato inválido! Use DD/MM/AAAA.`
-
----
-
-## 5. Observações do usuário
-- O bot precisa estar em execução para responder às mensagens.
-- Use formato de data válido: `DD/MM/AAAA`.
-- Se o resultado for vazio, tente outra alternativa (`Grupo` ou `Idade`).
-- Aguarde até alguns segundos para o retorno, pois o sistema processa os dados internos antes de responder.
+- Jira Software
+- Git/Github
+- Python
+- Telegram
+- Visual Studio
+- Flask
+- pyTelegramBotAPI
+- BeautifulSoup
+- Dotenv
+- Requests
 
 ---
 
-## 6. Exemplo de Uso
-
-**`/start`**
-1. Escolha `Vacinas`.
-2. Escolha `Idade` ou `Grupo`.
-
-- Consulta por idade:
-  - Informe sua data de nascimento, por exemplo: `25/08/2016`.
-  - O bot retorna o grupo e as vacinas recomendadas para a faixa etária.
-
-- Consulta por grupo:
-  - Escolha `Adolescente`, `Adulto`, `Idoso`, etc.
-
-Saída típica:
-- `💉 CALENDÁRIO: CRIANÇA`
-- `📍 2 meses`
-- `• BCG _Dose única_`
-- `• Hepatite B _1ª dose_`
-
+# Backlog do Produto
+| Rank | Prioridade | User Story                                                                                                                                              | Estimativa | Sprint |
+|------|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|------------|--------|
+| 1    | Alta       | Como paciente, desejo obter informação de fácil acesso à respeito de uma ou mais vacinas.| 5          | 1      |
+| 2    | Alta       | Como parente de um paciente, gostaria de consultar as datas de vacinação para meu filho de 2 anos, para levá-lo na data correta e mantê-lo protegido contra doenças virais.                                                                    | 5          | 1      |                                                                                                                                                   | ...        | ...    |
+| 3   | Média      | Como usuário do assistente virtual, gostaria de receber notificações perto da data da próxima vacina para não me esquecer.     | 8          | 2      |
+| 4   | Média      | Como jornalista, gostaria de acessar os dados de cobertura vacinal da minha região para escrever uma matéria.    | 13          | 2      |
+| 5   | Média      | Como cidadão, gostaria de poder utilizar comandos de voz para fazer buscas no assistente virtual    | 8          | 3      |
+| 6   | Baixa      | Como adulto, gostaria de ver as possíveis dúvidas mais perguntadas sobre vacinações    | 3          | 3      |
+| 7   | Baixa      | Como usuário do assistente, gostaria de consultar os postos de saúde próximos de mim    | 5          | 3      |
 ---
 
-## Manual de Instalação
+# Registro das Sprints
 
-A seguir, o passo a passo completo para instalar e executar o bot localmente.
+| Sprint            | Previsão   | Status   | Histórico |
+|-------------------|------------|----------|-----------|
+| 01                | 05/04/2026 | a fazer  | [MVP](MVP/sp1.md)  |
+| 02                | 03/05/2026 | a fazer  | [a fazer]  |
+| 03                | 31/05/2026 | a fazer  | [a fazer] |
+| Feira de Soluções | 11/06/2026 | a fazer  | [a fazer] |
 
-### 1.1 Requisitos mínimos
-- Python 3.9 ou superior instalado
-- Conexão de internet ativa
-- Token do bot do Telegram (`BOT_TOKEN`) (criado com o BotFather)
 
-### 1.2 Instalação
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/PI-Nexus/Projeto-Integrador-I.git
-   cd Projeto-Integrador-I
-   ```
-2. Instale as dependências (deve ter `pip` instalado):
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Configure o token do bot no arquivo `.env` na raiz:
-   ```ini
-   TOKEN_BOT=seu_token_aqui
-   PORT=8080
-   ```
-4. Crie a pasta de dados caso ainda não exista:
-   ```bash
-   mkdir data
-   ```
-
-### 1.3 Executando
-```bash
-python main.py
-```
-Verifique no console se aparece: `Bot iniciando...`.
-
-### 1.4 Teste rápido
-- No Telegram, abra `@Gotinha_bot`.
-- Envie `/start`.
-- Selecione `Vacinas` e escolha `Grupo` ou `Idade`.
-
-### 1.5 Problemas comuns
-- `telebot.apihelper.ApiTelegramException` → token inválido ou firewall.
-- `ModuleNotFoundError` → ambiente virtual não ativado ou dependências faltando.
-- `FileNotFoundError: data/scrap.txt` → execute o script `scrap.py`.
-
----
-
-## Conclusão
-
-O bot tem como objetivo facilitar o acesso às informações sobre vacinação de forma simples, rápida e acessível através da interface do Telegram.
+Manual do Usuário: [Clique aqui para abrir o manual](docs/Manual%20do%20Usuário.md) 
