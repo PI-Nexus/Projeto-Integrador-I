@@ -37,6 +37,18 @@ O foco do projeto é o algoritmo, sem o uso de persistência de dados (Banco de 
 - Requests
 
 ---
+## Product Backlog
+| Rank | Prioridade | User Story                                                                                                                                              | Estimativa | Sprint |
+|------|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|------------|--------|
+| 1    | Alta       | Como paciente, desejo obter informação de fácil acesso à respeito de uma ou mais vacinas.| 5          | 1      |
+| 2    | Alta       | Como parente de um paciente, gostaria de consultar as datas de vacinação para meu filho de 2 anos, para levá-lo na data correta e mantê-lo protegido contra doenças virais.                                                                    | 5          | 1      |                                                                                                                                                   | ...        | ...    |
+| 3   | Média      | Como usuário do assistente virtual, gostaria de receber notificações perto da data da próxima vacina para não me esquecer.     | 8          | 2      |
+| 4   | Média      | Como jornalista, gostaria de acessar os dados de cobertura vacinal da minha região para escrever uma matéria.    | 13          | 2      |
+| 5   | Média      | Como cidadão, gostaria de poder utilizar comandos de voz para fazer buscas no assistente virtual    | 8          | 3      |
+| 6   | Baixa      | Como adulto, gostaria de ver as possíveis dúvidas mais perguntadas sobre vacinações    | 3          | 3      |
+| 7   | Baixa      | Como usuário do assistente, gostaria de consultar os postos de saúde próximos de mim    | 5          | 3      |
+---
+
 
 # Manual do Usuário — Bot de Vacinação
 
