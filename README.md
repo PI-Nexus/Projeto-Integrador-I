@@ -49,6 +49,15 @@ O foco do projeto é o algoritmo, sem o uso de persistência de dados (Banco de 
 | 7   | Baixa      | Como usuário do assistente, gostaria de consultar os postos de saúde próximos de mim    | 5          | 3      |
 ---
 
+# Registro das Sprints
+
+| Sprint            | Previsão   | Status   | Histórico |
+|-------------------|------------|----------|-----------|
+| 01                | 05/04/2026 | a fazer  | [MVP](MVP/sp1.md)  |
+| 02                | 03/05/2026 | a fazer  | [a fazer]  |
+| 03                | 31/05/2026 | a fazer  | [a fazer] |
+| Feira de Soluções | 11/06/2026 | a fazer  | [a fazer] |
+
 
 # Manual do Usuário — Bot de Vacinação
 
