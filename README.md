@@ -9,17 +9,17 @@ O foco do projeto é o algoritmo, sem o uso de persistência de dados (Banco de 
 ---
 
 ## Equipe
-|    Função     | Nome                                  |                                                                                                                                                      LinkedIn & GitHub                                                                                                                                                      |
+|    Função    | Nome                                   |                                                                                                                                                                                                                                                                                                                            LinkedIn & GitHub                                                                                                                                                                                                                                                                                                                            |
 | :-----------: | :------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| Product Owner |   Natan Telles         |     [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/natan-telles-5b2970288) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/natan-telles)              |
+| Product Owner |    Natan Telles         |     [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/natan-telles-5b2970288) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/natan-telles)               |
 | Scrum Master  | Davi Couto |      [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/davi-couto-do-nascimento-7604343a6/) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/DaviCouto-gd)     |
-| Team Member   | Daniel Oliveira              |         [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/daniel-oliveira-alexandre-753a063bb) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/oliveiraalexandredaniel-lgtm)        |
-|  Team Member  | Eduardo Cabral                 |         [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/eduardo-vital-cabral-529499312/) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/edu-cabral)        |
-|  Team Member  | Enzo Francisquetto                 |   [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/enzofrancisquetto-018377356) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/francisquettoenzo)   |
-|  Team Member  | Isaac Ferraz       |           [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/isaacferraz1311) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/isaac-ferraz)   | 
-|  Team Member  | Leonardo Gabriel       |           [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/leonardo-gabriel-dos-santos-79b848329) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/Leonardo-gabsantos) |
-|  Team Member  | Renan Ramos       |           [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/renan-ramos-a520662a2) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/renandevcode) |
-|  Team Member  | Yago Moraes       |           [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/yago-moraes) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/YagoRGM) 
+| Team Member   | Daniel Oliveira               |          [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/daniel-oliveira-alexandre-753a063bb) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/oliveiraalexandredaniel-lgtm)         |
+|  Team Member  | Eduardo Cabral                  |          [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/eduardo-vital-cabral-529499312/) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/edu-cabral)         |
+|  Team Member  | Enzo Francisquetto                  |    [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/enzofrancisquetto-018377356) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/francisquettoenzo)   |
+|  Team Member  | Isaac Ferraz       |            [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/isaacferraz1311) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/isaac-ferraz)   | 
+|  Team Member  | Leonardo Gabriel       |            [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/leonardo-gabriel-dos-santos-79b848329) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/Leonardo-gabsantos) |
+|  Team Member  | Renan Ramos       |            [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/renan-ramos-a520662a2) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/renandevcode) |
+|  Team Member  | Yago Moraes       |            [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/yago-moraes) [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/YagoRGM) 
 
 ---
 
@@ -41,17 +41,17 @@ O foco do projeto é o algoritmo, sem o uso de persistência de dados (Banco de 
 | Rank | Prioridade | User Story                                                                                                                                              | Estimativa | Sprint |
 |------|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|------------|--------|
 | 1    | Alta       | Como paciente, desejo obter informação de fácil acesso à respeito de uma ou mais vacinas.| 5          | 1      |
-| 2    | Alta       | Como parente de um paciente, gostaria de consultar as datas de vacinação para meu filho de 2 anos, para levá-lo na data correta e mantê-lo protegido contra doenças virais.                                                                    | 5          | 1      |                                                                                                                                                   | ...        | ...    |
+| 2    | Alta       | Como parente de um paciente, gostaria de consultar as datas de vacinação para meu filho de 2 anos, para levá-lo na data correta e mantê-lo protegido contra doenças virais.                                                              | 5          | 1      |                                                                                                                                                                                                                                                                                                                            | ...        | ...    |
 | 3   | Média      | Como usuário do assistente virtual, gostaria de receber notificações perto da data da próxima vacina para não me esquecer.     | 8          | 2      |
-| 4   | Média      | Como jornalista, gostaria de acessar os dados de cobertura vacinal da minha região para escrever uma matéria.    | 13          | 2      |
-| 5   | Média      | Como cidadão, gostaria de poder utilizar comandos de voz para fazer buscas no assistente virtual    | 8          | 3      |
-| 6   | Baixa      | Como adulto, gostaria de ver as possíveis dúvidas mais perguntadas sobre vacinações    | 3          | 3      |
-| 7   | Baixa      | Como usuário do assistente, gostaria de consultar os postos de saúde próximos de mim    | 5          | 3      |
+| 4   | Média      | Como jornalista, gostaria de acessar os dados de cobertura vacinal da minha região para escrever uma matéria.     | 13          | 2      |
+| 5   | Média      | Como cidadão, gostaria de poder utilizar comandos de voz para fazer buscas no assistente virtual     | 8          | 3      |
+| 6   | Baixa      | Como adulto, gostaria de ver as possíveis dúvidas mais perguntadas sobre vacinações     | 3          | 3      |
+| 7   | Baixa      | Como usuário do assistente, gostaria de consultar os postos de saúde próximos de mim     | 5          | 3      |
 ---
 
 # Registro das Sprints
 
-| Sprint            | Previsão   | Status   | Histórico |
+| Sprint             | Previsão   | Status   | Histórico |
 |-------------------|------------|----------|-----------|
 | 01                | 05/04/2026 | a fazer  | [MVP](MVP/sp1.md)  |
 | 02                | 03/05/2026 | a fazer  | [a fazer]  |
@@ -67,6 +67,9 @@ O bot de vacinação (`@Gotinha_bot`) é um assistente Telegram para consulta r�
 - Pesquisa por data de nascimento (idade atual)
 
 A base de dados é obtida via scraping de `https://www.gov.br/saude/pt-br/vacinacao/calendario` e armazenada em `data/scrap.txt`. Se o arquivo não existir ou estiver vazio, o bot carrega automaticamente os dados mais recentes.
+
+### Vídeo de Demonstração
+Confira o bot em funcionamento: [https://youtube.com/shorts/9Sdsh29rDXo?si=FZLqHO0BJC0KCYis](https://youtube.com/shorts/9Sdsh29rDXo?si=FZLqHO0BJC0KCYis)
 
 ---
 
