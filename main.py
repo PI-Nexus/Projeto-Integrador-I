@@ -9,6 +9,7 @@ from flask import Flask
 from src.auxiliares import plural
 from src.scrap import formatar_mensagem_bot, scrap
 import shutil
+import src.buscar_postos
 
 load_dotenv()
 
