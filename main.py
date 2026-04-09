@@ -9,6 +9,8 @@ from flask import Flask
 from src.auxiliares import plural
 from src.scrap import formatar_mensagem_bot, scrap
 import shutil
+from io import BytesIO
+import uuid 
 
 load_dotenv()
 
@@ -75,6 +77,47 @@ def finalizar_servico(msg):
     except Exception as e:
         print(f'Não foi possível apagar o diretório: {e}')
 
+@bot.message_handler(func=lambda msg: msg.text.startswith("🔔 Lembrar:"))
+def preparar_lembrete_texto(msg):
+    # Extrai o nome da vacina do texto do botão
+    nome_vacina = msg.text.replace("🔔 Lembrar: ", "")
+    
+    agora = datetime.now().strftime("%Y%m%dT090000Z")
+    uid = str(uuid.uuid4)
+    
+    # Estrutura completa seguindo o padrão RFC 5545
+    ics_content = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Bot Gotinha//NONSGML v1.0//PT
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+DTSTAMP:{agora}
+UID:{uid}
+DTSTART:{agora}
+DTEND:{agora}
+SUMMARY:Vacinação: {nome_vacina}
+DESCRIPTION:Lembrete gerado pelo Bot Gotinha. Não esqueça seus documentos!
+BEGIN:VALARM
+TRIGGER:-PT15M
+ACTION:DISPLAY
+DESCRIPTION:Lembrete de Vacinação
+END:VALARM
+END:VEVENT
+END:VCALENDAR"""
+
+    files = BytesIO(ics_content.encode('utf-8'))
+    files.name = f"lembrete.ics"
+    
+    # No Android, o Telegram às vezes precisa identificar o arquivo como documento
+    bot.send_document(
+        msg.chat.id, 
+        files, 
+        caption=f"✅ Lembrete para **{nome_vacina}**.\n\nSe estiver no Android, toque no arquivo e escolha 'Abrir com Calendário/Agenda'.",
+        parse_mode="Markdown"
+    )
+    
+    servicos(msg)
+
 @bot.message_handler(func=lambda msg: msg.text == "Vacinas")
 def filtrar_pesquisa(msg):
     markup=types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
@@ -128,14 +171,22 @@ def processar_dados(msg):
             id_site = "idoso"
 
         dados_vacinas = scrap(id_site, sub_faixa)
-        mensagem_final = formatar_mensagem_bot(dados_vacinas)
-        faixa_amigavel = dados_vacinas[0]['grupo']
+        if dados_vacinas:
+            mensagem_final = formatar_mensagem_bot(dados_vacinas)
+            prox_vax = dados_vacinas[0].get('vacina', 'Vacina')
+            #faixa_amigavel = dados_vacinas[0]['grupo']
+            bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown")
+            texto_fim = f"✅ Identificamos que sua próxima vacina é: *{prox_vax}*. Deseja agendar um lembrete ou continuar navegando?"
+            servico_final(msg, texto_fim, prox_vax)
 
-        bot.send_message(msg.chat.id,
-                         f"✅ Grupo: {faixa_amigavel} ({idadeAnos if idadeAnos >= 1 else idadeMes} {plural('ano','anos',idadeAnos) if idadeAnos>=1 else plural('mês','meses',idadeMes)}).\n⌛ Buscando informações oficiais...")
+            #bot.send_message(msg.chat.id,
+            #                f"✅ Grupo: {faixa_amigavel} ({idadeAnos if idadeAnos >= 1 else idadeMes} {plural('ano','anos',idadeAnos) if idadeAnos>=1 else plural('mês','meses',idadeMes)}).\n⌛ Buscando informações oficiais...")
 
-        bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown")
-        servico_final(msg)
+            #bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown")
+            #servico_final(msg)
+        else:
+            bot.send_message(msg.chat.id, "Não encontrei vacinas para essa faixa.")
+            servicos(msg)
 
     except ValueError:
         bot.reply_to(msg, "⚠️ Formato inválido! Use DD/MM/AAAA.")
@@ -153,16 +204,24 @@ def enviar_grupos(msg):
         dados_vacinais = scrap(id_site)
         mensagem_final = formatar_mensagem_bot(dados_vacinais)
         bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove())
-        servico_final(msg)
+        prox_v = dados_vacinais[0].get('vacina', 'Vacina') if dados_vacinais else ''
+        texto_g = f"✅ Pesquisa concluída para o grupo {msg.text}. Deseja agendar um lembrete?"
+        servico_final(msg, texto_g, prox_v)
     except Exception:
         bot.reply_to(msg, 'Não encontramos dados para esse grupo.')
+        servicos(msg)
 
-def servico_final(msg):
+def servico_final(msg, texto="Sua pesquisa chegou ao fim. Deseja continuar?", nome_vacina=''):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Encerrar', 'Continuar')
-    bot.send_message(msg.chat.id, 'Sua pesquisa chegou ao fim. Deseja continuar?', reply_markup=markup)
+    # Se não houver nome de vacina, adicionamos apenas botões padrão
+    if nome_vacina:
+        markup.add(f"🔔 Lembrar: {nome_vacina}", 'Continuar', 'Encerrar')
+    else:
+        markup.add('Continuar', 'Encerrar')
+    bot.send_message(msg.chat.id, texto, reply_markup=markup, parse_mode="Markdown")
 
 # --- SERVIDOR FLASK ---
+
 
 app = Flask('')
 @app.route('/')
@@ -173,8 +232,9 @@ def run():
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
+
 if __name__ == "__main__":
-    t = threading.Thread(target=run)
-    t.start()
+    #t = threading.Thread(target=run)
+    #t.start()
     print("Bot iniciando...")
     bot.infinity_polling()
