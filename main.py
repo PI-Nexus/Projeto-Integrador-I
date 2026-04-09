@@ -13,6 +13,8 @@ from src.auxiliares import plural
 from src.scrap import formatar_mensagem_bot, scrap
 from src.scrap_cnes import buscar_ubs_cnes 
 from geopy.geocoders import Nominatim       
+import shutil
+import src.buscar_postos
 
 # 1. Configurações Iniciais
 load_dotenv()
