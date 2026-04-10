@@ -79,4 +79,6 @@ def buscar_postos_proximos(user_lat, user_lon):
 
 # ------------------ TESTE ------------------
 
-print(buscar_postos_proximos(-8.68, -35.58))
+if __name__ == "__main__":
+    # Teste local: exibe os 5 postos mais próximos para uma coordenada exemplo
+    print(buscar_postos_proximos(-8.68, -35.58))

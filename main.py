@@ -19,6 +19,9 @@ import src.buscar_postos
 # 1. Configurações Iniciais
 load_dotenv()
 TOKEN = os.getenv('TOKEN_BOT')
+if not TOKEN:
+    print("ERRO: variável de ambiente 'TOKEN_BOT' não encontrada.\nCrie um arquivo .env na raiz do projeto com a linha:\nTOKEN_BOT=<seu_token_do_telegram>\nOu exporte a variável no ambiente antes de executar o script.")
+    raise SystemExit(1)
 bot = telebot.TeleBot(TOKEN)
 
 # 2. Definição do Servidor Flask (Precisa estar aqui no escopo global)
