@@ -15,6 +15,7 @@ from src.scrap_cnes import buscar_ubs_cnes
 from geopy.geocoders import Nominatim       
 import shutil
 import src.buscar_postos
+from src.scrap_cobertura import buscar_cobertura_estado
 
 # 1. Configurações Iniciais
 load_dotenv()
@@ -38,7 +39,8 @@ def servicos(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     markup.add(
         'Início', 
-        'Vacinas', 
+        'Vacinas',
+        'Cobertura Vacinal',
         'Unidades próximas', 
         'FAQ'
     )
@@ -48,6 +50,30 @@ def servicos(msg):
 def resposta_inicio(msg):
     bot.reply_to(msg, "Você está no início! Selecione 'Vacinas' ou consulte as UBS próximas pelo GPS.")
 
+# --- FLUXO DE COBERTURA VACINAL ---
+@bot.message_handler(func=lambda msg: msg.text == "Cobertura Vacinal")
+def pedir_estado(msg):
+    bot.send_message(msg.chat.id, "Digite a sigla do estado (ex: SP):")
+    bot.register_next_step_handler(msg, processar_estado)
+
+def processar_estado(msg):
+    estado = msg.text.strip().upper()
+
+    bot.send_message(msg.chat.id, "🔎 Buscando dados atualizados... aguarde um instante ⏳")
+
+    resposta = buscar_cobertura_estado(estado)
+
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add("Consultar outro estado", "Continuar", "Voltar ao Menu Principal")
+
+    bot.send_message(msg.chat.id, resposta, reply_markup=markup, parse_mode="Markdown")
+
+# --- CONSULTAR OUTRO ESTADO ---
+@bot.message_handler(func=lambda msg: msg.text == "Consultar outro estado")
+def repetir_consulta(msg):
+    bot.send_message(msg.chat.id, "Digite a sigla do estado (ex: SP):")
+    bot.register_next_step_handler(msg, processar_estado)
+    
 # --- FLUXO DE LOCALIZAÇÃO (DESTAQUE DA SPRINT) ---
 
 @bot.message_handler(func=lambda msg: msg.text == "Unidades próximas")
