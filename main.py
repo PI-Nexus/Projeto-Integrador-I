@@ -15,10 +15,11 @@ import shutil
 import src.buscar_postos
 from src.scrap_cobertura import buscar_cobertura_estado
 from src.buscar_postos import buscar_postos_proximos,retorno_link_maps
+import src.notificador as notificador
 
 # 1. Configurações Iniciais
 load_dotenv()
-TOKEN = os.getenv('TOKEN')
+TOKEN = os.getenv('TOKEN_BOT')
 bot = telebot.TeleBot(TOKEN)
 
 # 2. Definição do Servidor Flask (Precisa estar aqui no escopo global)
@@ -87,20 +88,6 @@ def pedir_localizacao(msg):
 
 @bot.message_handler(content_types=['location'])
 def tratar_localizacao(msg):
-    lat = msg.location.latitude
-    lon = msg.location.longitude
-    postos_proximos = buscar_postos_proximos(lat, lon)
-
-    
-    # Retorno das coordenadas em formato de lista/texto monoespaçado
-    message=''
-    for posto in postos_proximos:
-        print(posto)
-        maps = retorno_link_maps(posto)
-        message += f'\n<a href="{maps}">{posto["nome"]}</a>\n'
-
-    bot.send_message(msg.chat.id, message, parse_mode="HTML")
-
     try:
         lat = msg.location.latitude
         lon = msg.location.longitude
@@ -164,9 +151,27 @@ def enviar_grupos(msg):
         dados_vacinais = scrap(id_site)
         mensagem_final = formatar_mensagem_bot(dados_vacinais)
         bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown")
+        # Opção notificação vacina mais próxima
         servico_final(msg)
     except Exception:
         bot.reply_to(msg, 'Não encontramos dados.')
+
+@bot.message_handler(func=lambda msg: msg.text == "Notificar Próxima Vacina")    
+def notificar(msg):
+    bot.send_message(msg.chat.id, "📧 Por favor, informe seu e-mail para receber o aviso:")
+    bot.register_next_step_handler(msg, finalizar_agendamento)
+
+def finalizar_agendamento(msg):
+    email_user = msg.text
+    # Aqui você usaria a lógica para descobrir a DATA da próxima vacina 
+    # baseada no scrap que você já fez. Exemplo:
+    data_proxima = "2026-04-16" 
+    vacina_nome = "Febre Amarela"
+
+    notificador.salvar_agendamento(msg.chat.id, email_user, vacina_nome, data_proxima)
+    
+    bot.send_message(msg.chat.id, f"✅ Confirmado! Avisaremos em {email_user} sobre a vacina {vacina_nome}.")
+    servicos(msg)
 
 # --- FAQ E ENCERRAMENTO ---
 
@@ -188,11 +193,10 @@ def continuar(msg):
 def finalizar_servico(msg):
     bot.send_message(msg.chat.id, "✅ Atendimento finalizado!", reply_markup=ReplyKeyboardRemove())
 
-def servico_final(msg, texto="Sua pesquisa chegou ao fim. Deseja continuar?", nome_vacina=''):
+def servico_final(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Encerrar', 'Continuar')
+    markup.add('Notificar Próxima Vacina','Encerrar', 'Continuar')
     bot.send_message(msg.chat.id, 'Deseja realizar outra consulta?', reply_markup=markup)
-
 # --- EXECUÇÃO ---
 
 if __name__ == "__main__":
@@ -203,6 +207,10 @@ if __name__ == "__main__":
     t = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False))
     t.daemon = True
     t.start()
+
+    t_notifica = threading.Thread(target=notificador.loop_notificacao, args=(bot,))
+    t_notifica.daemon = True
+    t_notifica.start()
     
     print("Bot Gotinha Ativado com Localização! 🚀")
     bot.infinity_polling()
