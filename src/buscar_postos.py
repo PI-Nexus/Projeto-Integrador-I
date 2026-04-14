@@ -5,11 +5,17 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
+import os
 
 
 # ------------------ CARREGAR CSV ------------------
 
 caminho = "Unidade_basica_de_saude.csv"
+
+
+base_dir = os.path.dirname(__file__)
+caminho = os.path.join(base_dir, "Unidade_basica_de_saude.csv")
+
 
 df = pd.read_csv(caminho, sep=";")
 
