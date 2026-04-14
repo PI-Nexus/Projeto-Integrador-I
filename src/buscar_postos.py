@@ -1,11 +1,21 @@
 import pandas as pd
 import math
+
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
 import os
+
 
 # ------------------ CARREGAR CSV ------------------
 
+caminho = "Unidade_basica_de_saude.csv"
+
+
 base_dir = os.path.dirname(__file__)
 caminho = os.path.join(base_dir, "Unidade_basica_de_saude.csv")
+
 
 df = pd.read_csv(caminho, sep=";")
 
@@ -71,7 +81,9 @@ def buscar_postos_proximos(user_lat, user_lon):
         resultados.append({
             "nome": row["NOME"],
             "endereco": f"{row['LOGRADOURO']}, {row['BAIRRO']}",
-            "distancia": round(distancia, 2)
+            "distancia": round(distancia, 2),
+            "lat":row["LATITUDE"],
+            "lon":row["LONGITUDE"]
         })
 
     resultados.sort(key=lambda x: x["distancia"])
@@ -79,4 +91,24 @@ def buscar_postos_proximos(user_lat, user_lon):
 
 # ------------------ TESTE ------------------
 
-print(buscar_postos_proximos(-8.68, -35.58))
+driver = webdriver.Chrome()
+def retorno_link_maps(data):
+    lat_ubs, lon_ubs = data['lat'], data['lon']
+    name=str(data['nome']).title().replace(" ", "+")
+    maps = f"https://www.google.com/maps/@{lat_ubs},{lon_ubs},14z"
+    # Abre o site
+    driver.get(maps)
+
+    # Encontra a barra de pesquisa, digita e busca
+    search_bar = driver.find_element(By.NAME, "q")
+    search_bar.send_keys(name)
+    search_bar.send_keys(Keys.RETURN)
+
+    url = driver.current_url
+
+    WebDriverWait(driver, 10).until(
+        lambda d: d.current_url != url
+    )
+    return driver.current_url
+
+
