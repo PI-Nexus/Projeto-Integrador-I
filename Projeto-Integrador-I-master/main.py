@@ -169,7 +169,7 @@ def handle_callback(call):
             types.InlineKeyboardButton('FAQ', callback_data='faq'),
         )
         bot.edit_message_text(
-            'Olá! Eu sou o Assistente Gotinha. Como eu posso te ajudar?',
+            'Olá! Eu sou o Assistente Gotinha. Como posso te ajudar?',
             chat_id=msg.chat.id,
             message_id=msg.message_id,
             reply_markup=markup
