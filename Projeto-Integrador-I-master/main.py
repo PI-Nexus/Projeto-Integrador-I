@@ -124,7 +124,7 @@ def handle_callback(call):
             message_id=msg.message_id,
             reply_markup=markup
         )
-
+        
     elif call.data.startswith('grupo_'):
         id_site = call.data.replace('grupo_', '')
         try:
