@@ -4,6 +4,7 @@ import smtplib
 import time
 from datetime import datetime, timedelta
 from email.message import EmailMessage
+import src.auxiliares
 
 # Caminho seguindo o seu padrão da pasta data/
 DATA_DIR = 'data'
@@ -74,6 +75,22 @@ def verificar_agendamentos(bot):
             writer.writerows(agendamentos_restantes)
     except Exception as e:
         print(f"Erro ao processar notificações: {e}")
+
+def sugerir_vacinas(data_vacinas, idade_usuario=None):
+    # Se o usuário NÃO informou idade (fluxo por grupo), retorna tudo
+    if idade_usuario is None:
+        return data_vacinas 
+    
+    disponiveis = []
+    for v in data_vacinas:
+        inicio, fim = src.auxiliares.obter_faixa_etaria(v['periodo'])
+        
+        # LÓGICA: Se a idade do usuário é menor ou igual ao FIM do período,
+        # ele ainda pode ou deve tomar a vacina.
+        if idade_usuario <= fim:
+            disponiveis.append(v)
+            
+    return disponiveis
 
 def loop_notificacao(bot):
     """Loop diário para a thread de background."""
