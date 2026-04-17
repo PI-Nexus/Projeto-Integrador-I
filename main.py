@@ -89,9 +89,13 @@ def pedir_localizacao(msg):
 def tratar_localizacao(msg):
     lat = msg.location.latitude
     lon = msg.location.longitude
+    #Mensagem de espera
+    bot.send_message(
+    msg.chat.id,
+    "📍 Localização recebida.\nEstou buscando os postos mais próximos de você... aguarde alguns segundos."
+)
     postos_proximos = buscar_postos_proximos(lat, lon)
 
-    
     # Retorno das coordenadas em formato de lista/texto monoespaçado
     message=''
     for posto in postos_proximos:
