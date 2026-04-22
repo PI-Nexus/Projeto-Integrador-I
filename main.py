@@ -15,11 +15,16 @@ import shutil
 import src.buscar_postos
 from src.scrap_cobertura import buscar_cobertura_estado
 from src.buscar_postos import buscar_postos_proximos,retorno_link_maps
+import src.notificador as notificador
+from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo
+
 
 # 1. Configurações Iniciais
 load_dotenv()
-TOKEN = os.getenv('TOKEN')
+TOKEN = os.getenv('TOKEN_BOT')
 bot = telebot.TeleBot(TOKEN)
+
+user_states = {}
 
 # 2. Definição do Servidor Flask (Precisa estar aqui no escopo global)
 app = Flask('')
@@ -87,20 +92,6 @@ def pedir_localizacao(msg):
 
 @bot.message_handler(content_types=['location'])
 def tratar_localizacao(msg):
-    lat = msg.location.latitude
-    lon = msg.location.longitude
-    postos_proximos = buscar_postos_proximos(lat, lon)
-
-    
-    # Retorno das coordenadas em formato de lista/texto monoespaçado
-    message=''
-    for posto in postos_proximos:
-        print(posto)
-        maps = retorno_link_maps(posto)
-        message += f'\n<a href="{maps}">{posto["nome"]}</a>\n'
-
-    bot.send_message(msg.chat.id, message, parse_mode="HTML")
-
     try:
         lat = msg.location.latitude
         lon = msg.location.longitude
@@ -140,11 +131,17 @@ def processar_dados(msg):
         data_nascimento = datetime.strptime(data_texto, "%d/%m/%Y")
         hoje = datetime.now()
         idadeAnos = hoje.year - data_nascimento.year - ((hoje.month, hoje.day) < (data_nascimento.month, data_nascimento.day))
-        
+
         # Simplificação para o exemplo, use suas faixas de meses aqui
         id_site = "adulto" if idadeAnos >= 18 else "crianca"
         
         dados_vacinas = scrap(id_site, sub_faixa)
+
+        user_states[msg.chat.id] = {
+            'idade': idadeAnos,
+            'vacinas': dados_vacinas
+        }
+
         mensagem_final = formatar_mensagem_bot(dados_vacinas)
         bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown")
         servico_final(msg)
@@ -162,11 +159,77 @@ def enviar_grupos(msg):
     id_site = msg.text.lower()
     try:
         dados_vacinais = scrap(id_site)
+        #print(dados_vacinais)
+        user_states[msg.chat.id] = {
+            'idade': None,
+            'vacinas': dados_vacinais
+        }
         mensagem_final = formatar_mensagem_bot(dados_vacinais)
         bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown")
+        # Opção notificação vacina mais próxima
         servico_final(msg)
     except Exception:
         bot.reply_to(msg, 'Não encontramos dados.')
+
+@bot.message_handler(func=lambda msg: msg.text == "Notificar Próxima Vacina")    
+def notificar(msg):
+    # 1. Recupera os dados (aqui você usaria sua lógica de estado ou banco)
+    # idade_user pode ser um int (ex: 10) ou None (se foi por grupo)
+    dados = user_states.get(msg.chat.id)
+    if not dados:
+        bot.send_message(msg.chat.id, "Por favor, informe sua idade ou grupo primeiro.")
+        return
+
+    idade_atual = dados['idade']
+    vacinas_do_scrap = dados['vacinas']
+
+    # 2. Chama a lógica do notificador
+    proximas = notificador.sugerir_vacinas(
+        data_vacinas=vacinas_do_scrap, 
+        idade_usuario=idade_atual
+    )
+
+    if proximas:
+        # Se veio do fluxo de IDADE, pegamos a primeira (mais próxima)
+        # Se veio do fluxo de GRUPO, 'proximas' contém a lista toda
+        if idade_atual is not None:
+            proxima = proximas[0]
+            texto = (
+                f"✅ Com base na sua idade ({idade_atual} anos), a próxima vacina é:\n\n"
+                f"💉 *{proxima['vacina']}*\n"
+                f"📅 Período: {proxima['periodo']}\n"
+                f"ℹ️ Dose: {proxima['dose'].strip()}\n\n"
+                "📧 Informe seu e-mail para agendar o lembrete:"
+            )
+            bot.send_message(msg.chat.id, texto, parse_mode="Markdown")
+            # Registra o próximo passo passando os dados da vacina específica
+            bot.register_next_step_handler(msg, finalizar_agendamento, proxima['vacina'], proxima['periodo'])
+        
+        else:
+            # Fluxo por GRUPO: O usuário precisa escolher qual vacina da lista
+            texto = "📋 Escolha qual dessas vacinas você deseja monitorar (digite o nome ou selecione):"
+            # Aqui você poderia gerar botões dinâmicos com a lista de 'proximas'
+            markup = gerar_botoes_vacinas(proximas) 
+            bot.send_message(msg.chat.id, texto, reply_markup=markup)
+            
+    else:
+        bot.send_message(msg.chat.id, "Não encontrei vacinas pendentes para o seu perfil.")
+     
+def finalizar_agendamento(msg, vacina_nome, data_proxima):
+    email_user = msg.text
+    chat_id = msg.chat.id
+
+    dados = user_states.get(chat_id)
+    data_nasc = dados.get('data_nasc')
+    proxima = calcular_data_alvo(data_nasc, data_proxima)
+
+    if "@" not in email_user:
+        bot.send_message(chat_id, "❌ E-mail inválido. Tente clicar no botão novamente.")
+        return
+    
+    notificador.salvar_agendamento(msg.chat.id, email_user, vacina_nome, proxima)
+    bot.send_message(msg.chat.id, f"✅ Confirmado! Avisaremos em {email_user} sobre a vacina {vacina_nome}.")
+    servicos(msg)
 
 # --- FAQ E ENCERRAMENTO ---
 
@@ -190,9 +253,8 @@ def finalizar_servico(msg):
 
 def servico_final(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Encerrar', 'Continuar')
+    markup.add('Notificar Próxima Vacina','Encerrar', 'Continuar')
     bot.send_message(msg.chat.id, 'Deseja realizar outra consulta?', reply_markup=markup)
-
 # --- EXECUÇÃO ---
 
 if __name__ == "__main__":
@@ -203,6 +265,10 @@ if __name__ == "__main__":
     t = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False))
     t.daemon = True
     t.start()
+
+    t_notifica = threading.Thread(target=notificador.loop_notificacao, args=(bot,))
+    t_notifica.daemon = True
+    t_notifica.start()
     
     print("Bot Gotinha Ativado com Localização! 🚀")
     bot.infinity_polling()
