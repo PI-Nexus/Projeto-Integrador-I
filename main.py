@@ -13,7 +13,7 @@ from src.scrap_cnes import buscar_ubs_cnes
 from geopy.geocoders import Nominatim       
 import shutil
 import src.buscar_postos
-from src.scrap_cobertura import buscar_cobertura_estado
+from src.scrap_cobertura import buscar_cobertura_estado, baixar_e_tratar_dados
 from src.buscar_postos import buscar_postos_proximos,retorno_link_maps
 import src.notificador as notificador
 from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo
@@ -37,6 +37,8 @@ def home():
 
 @bot.message_handler(commands=['start', 'help'])
 def comandos(msg):
+    # baixa dados de cobertura vacinal 
+    threading.Thread(target=baixar_e_tratar_dados).start()
     servicos(msg)
 
 def servicos(msg):
@@ -55,8 +57,44 @@ def resposta_inicio(msg):
     bot.reply_to(msg, "Você está no início! Selecione 'Vacinas' ou consulte as UBS próximas pelo GPS.")
 
 # --- FLUXO DE COBERTURA VACINAL ---
+regioes = {
+    "Norte": ["AC", "AP", "AM", "PA", "RO", "RR", "TO"],
+    "Nordeste": ["AL", "BA", "CE", "MA", "PB", "PE", "PI", "RN", "SE"],
+    "Centro-Oeste": ["DF", "GO", "MT", "MS"],
+    "Sudeste": ["ES", "MG", "RJ", "SP"],
+    "Sul": ["PR", "RS", "SC"]
+}
+
 @bot.message_handler(func=lambda msg: msg.text == "Cobertura Vacinal")
-def pedir_estado(msg):
+def escolher_regiao(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    
+    for regiao in regioes.keys():
+        markup.add(regiao)
+
+    markup.add("Digitar estado manualmente", "Voltar ao Menu Principal")
+
+    bot.send_message(msg.chat.id, "Escolha uma região:", reply_markup=markup)
+
+@bot.message_handler(func=lambda msg: msg.text in regioes.keys())
+def mostrar_estados(msg):
+    estados = regioes[msg.text]
+
+    markup = types.ReplyKeyboardMarkup(row_width=4, resize_keyboard=True)
+
+    for estado in estados:
+        markup.add(estado)
+
+    markup.add("Voltar")
+
+    bot.send_message(msg.chat.id, "Escolha o estado:", reply_markup=markup)
+
+@bot.message_handler(func=lambda msg: msg.text == "Voltar")
+def voltar_para_regioes(msg):
+    escolher_regiao(msg)
+
+@bot.message_handler(func=lambda msg: msg.text == "Digitar estado manualmente")
+def pedir_estado_manual(msg):
     bot.send_message(msg.chat.id, "Digite a sigla do estado (ex: SP):")
     bot.register_next_step_handler(msg, processar_estado)
 
@@ -67,16 +105,19 @@ def processar_estado(msg):
 
     resposta = buscar_cobertura_estado(estado)
 
-    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add("Consultar outro estado", "Continuar", "Voltar ao Menu Principal")
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    markup.add("Realizar nova consulta", "Voltar ao Menu Principal")
 
-    bot.send_message(msg.chat.id, resposta, reply_markup=markup, parse_mode="Markdown")
+    bot.send_message(msg.chat.id, resposta, reply_markup=markup, parse_mode="HTML")
 
-# --- CONSULTAR OUTRO ESTADO ---
-@bot.message_handler(func=lambda msg: msg.text == "Consultar outro estado")
-def repetir_consulta(msg):
-    bot.send_message(msg.chat.id, "Digite a sigla do estado (ex: SP):")
-    bot.register_next_step_handler(msg, processar_estado)
+@bot.message_handler(func=lambda msg: msg.text in sum(regioes.values(), []))
+def estado_por_botao(msg):
+    processar_estado(msg)
+
+# --- NOVA CONSULTA ---
+@bot.message_handler(func=lambda msg: msg.text == "Realizar nova consulta")
+def nova_consulta(msg):
+    escolher_regiao(msg)
     
 # --- FLUXO DE LOCALIZAÇÃO (DESTAQUE DA SPRINT) ---
 
