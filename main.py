@@ -2,7 +2,7 @@ import threading
 import telebot
 import os
 from telebot import types
-from datetime import datetime
+from datetime import datetime, date
 from dotenv import load_dotenv
 from telebot.types import ReplyKeyboardRemove
 from flask import Flask
@@ -129,6 +129,7 @@ def processar_dados(msg):
     data_texto = msg.text
     try:
         data_nascimento = datetime.strptime(data_texto, "%d/%m/%Y")
+
         hoje = datetime.now()
         idadeAnos = hoje.year - data_nascimento.year - ((hoje.month, hoje.day) < (data_nascimento.month, data_nascimento.day))
 
@@ -139,7 +140,8 @@ def processar_dados(msg):
 
         user_states[msg.chat.id] = {
             'idade': idadeAnos,
-            'vacinas': dados_vacinas
+            'vacinas': dados_vacinas,
+            'data_nasc' : data_nascimento.date()
         }
 
         mensagem_final = formatar_mensagem_bot(dados_vacinas)
@@ -189,6 +191,7 @@ def notificar(msg):
         idade_usuario=idade_atual
     )
 
+
     if proximas:
         # Se veio do fluxo de IDADE, pegamos a primeira (mais próxima)
         # Se veio do fluxo de GRUPO, 'proximas' contém a lista toda
@@ -211,24 +214,67 @@ def notificar(msg):
             # Aqui você poderia gerar botões dinâmicos com a lista de 'proximas'
             markup = gerar_botoes_vacinas(proximas) 
             bot.send_message(msg.chat.id, texto, reply_markup=markup)
-            
+            # chamar próximo método:
+            bot.register_next_step_handler(msg, processar_escolha_vacina)
     else:
         bot.send_message(msg.chat.id, "Não encontrei vacinas pendentes para o seu perfil.")
      
-def finalizar_agendamento(msg, vacina_nome, data_proxima):
+def processar_escolha_vacina(msg):
+    vacina_escolhida = msg.text
+    # Salva a escolha temporariamente para usar no próximo passo
+    chat_id = msg.chat.id
+    
+    bot.send_message(
+        chat_id, 
+        f"Você selecionou: *{vacina_escolhida}*.\n\n"
+        "📅 **Qual data você planeja tomar essa vacina?**\n"
+        "(Responda no formato: DD/MM/AAAA)",
+        parse_mode="Markdown"
+    )
+    # Próximo passo: Capturar a data
+    bot.register_next_step_handler(msg, capturar_data_agendamento, vacina_escolhida)
+
+def capturar_data_agendamento(msg, vacina_nome):
+    data_texto = msg.text
+    try:
+        # Valida se o formato da data está correto
+        data_validada = datetime.strptime(data_texto, "%d/%m/%Y").date()
+        
+        bot.send_message(
+            msg.chat.id, 
+            f"Perfeito! Agendado para {data_validada.strftime('%d/%m/%Y')}.\n"
+            "📧 Agora, digite seu **e-mail** para receber o lembrete:"
+        )
+        # Próximo passo: Finalizar com o e-mail
+        bot.register_next_step_handler(msg, finalizar_agendamento, vacina_nome, data_validada)
+        
+    except ValueError:
+        bot.send_message(msg.chat.id, "⚠️ Formato inválido. Por favor, use o formato DD/MM/AAAA (ex: 20/12/2024):")
+        bot.register_next_step_handler(msg, capturar_data_agendamento, vacina_nome)
+
+def finalizar_agendamento(msg, vacina_nome, data_ou_periodo):
     email_user = msg.text
     chat_id = msg.chat.id
-
-    dados = user_states.get(chat_id)
-    data_nasc = dados.get('data_nasc')
-    proxima = calcular_data_alvo(data_nasc, data_proxima)
 
     if "@" not in email_user:
         bot.send_message(chat_id, "❌ E-mail inválido. Tente clicar no botão novamente.")
         return
     
-    notificador.salvar_agendamento(msg.chat.id, email_user, vacina_nome, proxima)
-    bot.send_message(msg.chat.id, f"✅ Confirmado! Avisaremos em {email_user} sobre a vacina {vacina_nome}.")
+    if isinstance(data_ou_periodo, date):
+        # Veio do fluxo de GRUPO (já é uma data pronta)
+        data_final = data_ou_periodo
+    else:
+        # Veio do fluxo de IDADE (é uma string de período, ex: "10 anos")
+        dados = user_states.get(chat_id)
+        data_nasc = dados.get('data_nasc')
+        data_final = calcular_data_alvo(data_nasc, data_ou_periodo)
+
+    if data_final:
+        notificador.salvar_agendamento(chat_id, email_user, vacina_nome, data_final)
+        bot.send_message(chat_id, f"✅ Confirmado! Avisaremos em {email_user} sobre a vacina {vacina_nome}.")
+    else:
+        bot.send_message(chat_id, "⚠️ Houve um erro ao calcular a data da vacina.")
+    
     servicos(msg)
 
 # --- FAQ E ENCERRAMENTO ---
