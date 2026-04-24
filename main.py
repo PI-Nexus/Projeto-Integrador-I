@@ -13,7 +13,12 @@ from src.scrap_cnes import buscar_ubs_cnes
 from geopy.geocoders import Nominatim       
 import shutil
 import src.buscar_postos
-from src.scrap_cobertura import buscar_cobertura_estado
+from src.scrap_cobertura import (
+    buscar_cobertura_estado,
+    buscar_cobertura_municipio,
+    calcular_media_estados,
+    baixar_e_tratar_dados,
+)
 from src.buscar_postos import buscar_postos_proximos,retorno_link_maps
 import src.notificador as notificador
 from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo
@@ -37,6 +42,8 @@ def home():
 
 @bot.message_handler(commands=['start', 'help'])
 def comandos(msg):
+    # baixa dados de cobertura vacinal 
+    threading.Thread(target=baixar_e_tratar_dados).start()
     servicos(msg)
 
 def servicos(msg):
@@ -55,10 +62,167 @@ def resposta_inicio(msg):
     bot.reply_to(msg, "Você está no início! Selecione 'Vacinas' ou consulte as UBS próximas pelo GPS.")
 
 # --- FLUXO DE COBERTURA VACINAL ---
+regioes = {
+    "Norte": ["AC", "AP", "AM", "PA", "RO", "RR", "TO"],
+    "Nordeste": ["AL", "BA", "CE", "MA", "PB", "PE", "PI", "RN", "SE"],
+    "Centro-Oeste": ["DF", "GO", "MT", "MS"],
+    "Sudeste": ["ES", "MG", "RJ", "SP"],
+    "Sul": ["PR", "RS", "SC"]
+}
+
+# -------------------------------------------------------
+# FLUXO DE COBERTURA VACINAL — PONTO DE ENTRADA
+# -------------------------------------------------------
+
 @bot.message_handler(func=lambda msg: msg.text == "Cobertura Vacinal")
-def pedir_estado(msg):
+def menu_cobertura(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add(
+        "Por Estado",
+        "Por Município",
+        "🇧🇷 Ranking de Estados",
+        "Voltar ao Menu Principal",
+    )
+    bot.send_message(
+        msg.chat.id,
+        "Como deseja consultar a cobertura vacinal?",
+        reply_markup=markup,
+    )
+
+# Mostra regiões para o usuário escolher
+def escolher_regiao(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    for regiao in regioes.keys():
+        markup.add(regiao)
+    markup.add("Digitar estado manualmente", "Voltar ao Menu Principal")
+    bot.send_message(msg.chat.id, "Escolha uma região:", reply_markup=markup)
+
+@bot.message_handler(func=lambda msg: msg.text == "Realizar nova consulta")
+def nova_consulta(msg):
+    menu_cobertura(msg)
+
+@bot.message_handler(func=lambda msg: msg.text == "Digitar estado manualmente")
+def pedir_estado_manual(msg):
+    user_states[msg.chat.id] = {"modo_cobertura": "estado"}
     bot.send_message(msg.chat.id, "Digite a sigla do estado (ex: SP):")
     bot.register_next_step_handler(msg, processar_estado)
+
+# -------------------------------------------------------
+# OPÇÃO 1 — POR ESTADO (fluxo original, apenas entry-point novo)
+# -------------------------------------------------------
+
+@bot.message_handler(func=lambda msg: msg.text == "Por Estado")
+def cobertura_por_estado(msg):
+    # Limpa modo para garantir fluxo de estado
+    user_states[msg.chat.id] = {"modo_cobertura": "estado"}
+    escolher_regiao(msg)
+
+# -------------------------------------------------------
+# OPÇÃO 2 — POR MUNICÍPIO
+# -------------------------------------------------------
+
+@bot.message_handler(func=lambda msg: msg.text == "Por Município")
+def cobertura_por_municipio_inicio(msg):
+    # Guarda no estado do usuário que o próximo fluxo de região/estado
+    # será para município
+    user_states[msg.chat.id] = {"modo_cobertura": "municipio"}
+    escolher_regiao_municipio(msg)
+
+def escolher_regiao_municipio(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    for regiao in regioes.keys():
+        markup.add(regiao)
+    markup.add("Voltar ao Menu Principal")
+    bot.send_message(msg.chat.id, "Escolha a região do município:", reply_markup=markup)
+
+# Handler de regiões para fluxo de município
+# Necessário distinguir se o usuário está no fluxo "estado" ou "município".
+# A forma mais limpa: usar o campo user_states[chat_id]["modo_cobertura"].
+
+@bot.message_handler(func=lambda msg: msg.text in regioes.keys())
+def mostrar_estados_dispatch(msg):
+    """Redireciona para o fluxo correto conforme o modo escolhido."""
+    estado_usuario = user_states.get(msg.chat.id, {})
+    modo = estado_usuario.get("modo_cobertura", "estado")
+
+    estados_da_regiao = regioes[msg.text]
+    markup = types.ReplyKeyboardMarkup(row_width=4, resize_keyboard=True)
+    for estado in estados_da_regiao:
+        markup.add(estado)
+    markup.add("Voltar")
+
+    # Salva a lista de estados da região para saber quais são válidos no próximo passo
+    if msg.chat.id not in user_states:
+        user_states[msg.chat.id] = {}
+    user_states[msg.chat.id]["regiao_atual"] = msg.text
+
+    bot.send_message(msg.chat.id, "Escolha o estado:", reply_markup=markup)
+
+# Decide se vai consultar estado ou pedir município conforme o modo
+@bot.message_handler(func=lambda msg: msg.text in sum(regioes.values(), []))
+def estado_selecionado_dispatch(msg):
+    """Direciona para consulta por estado ou para pedir o município."""
+    estado_usuario = user_states.get(msg.chat.id, {})
+    modo = estado_usuario.get("modo_cobertura", "estado")
+
+    if modo == "municipio":
+        # Salva o estado e pede o município
+        user_states[msg.chat.id]["uf_selecionada"] = msg.text
+        bot.send_message(
+            msg.chat.id,
+            f"Estado selecionado: <b>{msg.text}</b>\n\nDigite o nome do município:",
+            parse_mode="HTML",
+            reply_markup=types.ReplyKeyboardRemove(),
+        )
+        bot.register_next_step_handler(msg, processar_municipio)
+    else:
+        # Fluxo original de estado
+        processar_estado(msg)
+
+def processar_municipio(msg):
+    municipio = msg.text.strip()
+    estado = user_states.get(msg.chat.id, {}).get("uf_selecionada", "")
+
+    if not estado:
+        bot.send_message(msg.chat.id, "⚠️ Erro interno: estado não encontrado. Tente novamente.")
+        menu_cobertura(msg)
+        return
+
+    bot.send_message(msg.chat.id, "🔎 Buscando dados... aguarde ⏳")
+
+    resposta = buscar_cobertura_municipio(estado, municipio)
+
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    markup.add("Realizar nova consulta", "Voltar ao Menu Principal")
+
+    # Limpa o modo para não interferir em próximas consultas
+    user_states.pop(msg.chat.id, None)
+
+    bot.send_message(msg.chat.id, resposta, reply_markup=markup, parse_mode="HTML")
+
+# -------------------------------------------------------
+# OPÇÃO 3 — RANKING DE ESTADOS
+# -------------------------------------------------------
+
+@bot.message_handler(func=lambda msg: msg.text == "🇧🇷 Ranking de Estados")
+def cobertura_ranking(msg):
+    bot.send_message(msg.chat.id, "🔎 Calculando ranking nacional... aguarde ⏳")
+
+    resposta = calcular_media_estados()
+
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    markup.add("Realizar nova consulta", "Voltar ao Menu Principal")
+
+    bot.send_message(msg.chat.id, resposta, reply_markup=markup, parse_mode="HTML")
+
+@bot.message_handler(func=lambda msg: msg.text == "Voltar")
+def voltar_para_regioes(msg):
+    # Preserva o modo_cobertura se existir, volta só para a tela de regiões
+    modo = user_states.get(msg.chat.id, {}).get("modo_cobertura", "estado")
+    if modo == "municipio":
+        escolher_regiao_municipio(msg)
+    else:
+        escolher_regiao(msg)
 
 def processar_estado(msg):
     estado = msg.text.strip().upper()
@@ -67,16 +231,14 @@ def processar_estado(msg):
 
     resposta = buscar_cobertura_estado(estado)
 
-    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add("Consultar outro estado", "Continuar", "Voltar ao Menu Principal")
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    markup.add("Realizar nova consulta", "Voltar ao Menu Principal")
 
-    bot.send_message(msg.chat.id, resposta, reply_markup=markup, parse_mode="Markdown")
+    # Limpa o modo para não interferir em próximas consultas
+    user_states.pop(msg.chat.id, None)
 
-# --- CONSULTAR OUTRO ESTADO ---
-@bot.message_handler(func=lambda msg: msg.text == "Consultar outro estado")
-def repetir_consulta(msg):
-    bot.send_message(msg.chat.id, "Digite a sigla do estado (ex: SP):")
-    bot.register_next_step_handler(msg, processar_estado)
+    bot.send_message(msg.chat.id, resposta, reply_markup=markup, parse_mode="HTML")
+
     
 # --- FLUXO DE LOCALIZAÇÃO (DESTAQUE DA SPRINT) ---
 
@@ -284,6 +446,20 @@ def faq_menu(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     markup.add('Documentos necessários', 'Reações comuns', 'Voltar ao Menu Principal')
     bot.send_message(msg.chat.id, "📌 *Dúvidas Frequentes*", reply_markup=markup, parse_mode="Markdown")
+
+@bot.message_handler(func=lambda msg: msg.text == "Documentos Necessários")
+def faq_documents(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add('Voltar ao Menu Principal')
+    bot.send_message(msg.chat.id, "Documento com Foto e Caderneta de Vacinação",
+    reply_markup=markup, parse_mode="Markdown")
+
+@bot.message_handler(func=lambda msg: msg.text == "Reações Comuns")
+def faq_reactions(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add('Voltar ao Menu Principal')
+    bot.send_message(msg.chat.id, """Febre Leve e Cansaço\n
+    Duração de 1 até 3 dias""", reply_markup=markup, parse_mode="Markdown")
 
 @bot.message_handler(func=lambda msg: msg.text == "Voltar ao Menu Principal")
 def voltar(msg):
