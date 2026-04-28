@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from telebot.types import ReplyKeyboardRemove
 from flask import Flask
 
+
 # Importações das suas funções internas
 from src.scrap import formatar_mensagem_bot, scrap
 from src.scrap_cnes import buscar_ubs_cnes 
@@ -19,9 +20,9 @@ from src.scrap_cobertura import (
     calcular_media_estados,
     baixar_e_tratar_dados,
 )
-from src.buscar_postos import buscar_postos_proximos,retorno_link_maps
+from src.buscar_postos import buscar_postos_proximos,threading_search,start_drivers
 import src.notify as notify
-from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo, converter_periodo_para_meses, definir_categoria_por_idade
+from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo, definir_categoria_por_idade, converter_periodo_para_meses
 
 
 # 1. Configurações Iniciais
@@ -244,6 +245,7 @@ def processar_estado(msg):
 
 @bot.message_handler(func=lambda msg: msg.text == "Unidades próximas")
 def pedir_localizacao(msg):
+    start_drivers()
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     btn_gps = types.KeyboardButton("📍 Compartilhar minha localização atual", request_location=True)
     markup.add(btn_gps, "Voltar ao Menu Principal")
@@ -252,25 +254,35 @@ def pedir_localizacao(msg):
         "Para encontrar as UBS mais próximas, clique no botão abaixo para enviar seu GPS.", 
         reply_markup=markup)
 
+
 @bot.message_handler(content_types=['location'])
 def tratar_localizacao(msg):
+
+    bot.send_message(msg.chat.id,"🔎 Buscando UBS próximas… aguarde um instante",parse_mode="Markdown")
     try:
         lat = msg.location.latitude
         lon = msg.location.longitude
         postos_proximos = buscar_postos_proximos(lat, lon)
+        links= threading_search(postos_proximos)
 
         # Retorno das coordenadas em formato de lista/texto monoespaçado
         message = ''
         for posto in postos_proximos:
-            print(posto)
-            maps = retorno_link_maps(posto)
-            message += f'\n<a href="{maps}">{posto["nome"]}</a>\n'
+            link=links[posto['nome']]
+            message += f'\n<a href="{link}">{posto["nome"]}</a>\n'
 
         bot.send_message(msg.chat.id, message, parse_mode="HTML")
+
 
     except Exception as e:
         print(f"Erro GPS: {e}")
         bot.send_message(msg.chat.id, "⚠️ Erro ao consultar o portal de saúde.")
+
+    except Exception as e:
+        print(f"Erro GPS: {e}")
+        bot.send_message(msg.chat.id, "⚠️ Erro ao consultar o portal de saúde.")
+
+
 
 # --- FLUXO DE VACINAS ---
 
@@ -410,6 +422,20 @@ def faq_menu(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     markup.add('Documentos necessários', 'Reações comuns', 'Voltar ao Menu Principal')
     bot.send_message(msg.chat.id, "📌 *Dúvidas Frequentes*", reply_markup=markup, parse_mode="Markdown")
+
+@bot.message_handler(func=lambda msg: msg.text == "Documentos Necessários")
+def faq_documents(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add('Voltar ao Menu Principal')
+    bot.send_message(msg.chat.id, "Documento com Foto e Caderneta de Vacinação",
+    reply_markup=markup, parse_mode="Markdown")
+
+@bot.message_handler(func=lambda msg: msg.text == "Reações Comuns")
+def faq_reactions(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add('Voltar ao Menu Principal')
+    bot.send_message(msg.chat.id, """Febre Leve e Cansaço\n
+    Duração de 1 até 3 dias""", reply_markup=markup, parse_mode="Markdown")
 
 @bot.message_handler(func=lambda msg: msg.text == "Voltar ao Menu Principal")
 def voltar(msg):
