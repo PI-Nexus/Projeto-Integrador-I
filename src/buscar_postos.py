@@ -9,7 +9,9 @@ from selenium.webdriver.chrome.options import Options
 import os
 
 options = Options()
-options.add_argument("--headless=new")
+options.add_argument("--headless=new") # roda Chrome sem interface gráfica
+options.add_argument("--disable-dev-shm-usage") # Evita problemas com memória compartilhada r
+options.add_argument("--no-sandbox") # Desativa o sandbox de segurança do Chrome
 
 # ------------------ CARREGAR CSV ------------------
 
@@ -125,19 +127,25 @@ def retorno_link_maps(data,driver):
     except:
         return None
 
-drivers=[]
+# inicializa drivers e impede ativação paralela da função start_drivers()
+drivers = []
+initializing = False
 def start_drivers():
-    global drivers
-    drivers=[
-        webdriver.Chrome(),
-        webdriver.Chrome(),
-        webdriver.Chrome(),
-        webdriver.Chrome()]
+    global drivers, initializing
 
+    if drivers or initializing:
+        return
 
+    initializing = True
+    drivers = [
+        webdriver.Chrome(options=options),
+        webdriver.Chrome(options=options),
+        webdriver.Chrome(options=options),
+        webdriver.Chrome(options=options)
+    ]
+    initializing = False
 
 def threading_search(postos):
-
     t1,t2,t3,t4=(
     threading.Thread(target=retorno_link_maps,args=(postos[0],drivers[0])),
     threading.Thread(target=retorno_link_maps,args=(postos[1],drivers[1])),
@@ -150,4 +158,7 @@ def threading_search(postos):
     t2.join()
     t3.join()
     t4.join()
+    for driver in drivers:
+        driver.quit()
+    drivers.clear()
     return links

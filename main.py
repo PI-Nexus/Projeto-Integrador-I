@@ -7,11 +7,10 @@ from dotenv import load_dotenv
 from telebot.types import ReplyKeyboardRemove
 from flask import Flask
 
-
 # Importações das suas funções internas
 from src.scrap import formatar_mensagem_bot, scrap
-from src.scrap_cnes import buscar_ubs_cnes 
-from geopy.geocoders import Nominatim       
+from src.scrap_cnes import buscar_ubs_cnes
+from geopy.geocoders import Nominatim
 import shutil
 import src.buscar_postos
 from src.scrap_cobertura import (
