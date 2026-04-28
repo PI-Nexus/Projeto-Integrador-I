@@ -1,28 +1,30 @@
-import threading
-import telebot
+# Bibliotecas padrão
 import os
-from telebot import types
+import threading
 from datetime import datetime
-from dotenv import load_dotenv
+
+# Bibliotecas externas
+import telebot
+from telebot import types
 from telebot.types import ReplyKeyboardRemove
+from dotenv import load_dotenv
 from flask import Flask
 
-# Importações das suas funções internas
+# Módulos internos
 from src.scrap import formatar_mensagem_bot, scrap
-from src.scrap_cnes import buscar_ubs_cnes
-from geopy.geocoders import Nominatim
-import shutil
-import src.buscar_postos
 from src.scrap_cobertura import (
     buscar_cobertura_estado,
     buscar_cobertura_municipio,
     calcular_media_estados,
     baixar_e_tratar_dados,
 )
-from src.buscar_postos import buscar_postos_proximos,threading_search,start_drivers
-
-import src.notificador as notificador
+from src.buscar_postos import (
+    buscar_postos_proximos,
+    threading_search,
+    start_drivers,
+)
 from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo
+import src.notificador as notificador
 
 
 # 1. Configurações Iniciais
@@ -39,7 +41,7 @@ app = Flask('')
 def home():
     return "Bot Gotinha está online ! ✅"
 
-# --- HANDLERS DE INTERFACE ---
+# HANDLERS DE INTERFACE
 
 @bot.message_handler(commands=['start', 'help'])
 def comandos(msg):
@@ -53,7 +55,6 @@ def servicos(msg):
         'Início', 
         'Vacinas',
         'Cobertura Vacinal',
-        "Dashboard Cobertura Vacinal",
         'Unidades próximas', 
         'FAQ'
     )
@@ -63,7 +64,7 @@ def servicos(msg):
 def resposta_inicio(msg):
     bot.reply_to(msg, "Você está no início! Selecione 'Vacinas' ou consulte as UBS próximas pelo GPS.")
 
-# --- FLUXO DE COBERTURA VACINAL ---
+# FLUXO DE COBERTURA VACINAL — PONTO DE ENTRADA
 regioes = {
     "Norte": ["AC", "AP", "AM", "PA", "RO", "RR", "TO"],
     "Nordeste": ["AL", "BA", "CE", "MA", "PB", "PE", "PI", "RN", "SE"],
@@ -72,17 +73,13 @@ regioes = {
     "Sul": ["PR", "RS", "SC"]
 }
 
-# -------------------------------------------------------
-# FLUXO DE COBERTURA VACINAL — PONTO DE ENTRADA
-# -------------------------------------------------------
-
 @bot.message_handler(func=lambda msg: msg.text == "Cobertura Vacinal")
 def menu_cobertura(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     markup.add(
-        "Por Estado",
-        "Por Município",
-        "🇧🇷 Ranking de Estados",
+        "Estado",
+        "Município",
+        "Ranking de Estados 🇧🇷",
         "Voltar ao Menu Principal",
     )
     bot.send_message(
@@ -91,39 +88,27 @@ def menu_cobertura(msg):
         reply_markup=markup,
     )
 
-# Mostra regiões para o usuário escolher
+# Fornece regiões para seleção do usuário
 def escolher_regiao(msg):
     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     for regiao in regioes.keys():
         markup.add(regiao)
-    markup.add("Digitar estado manualmente", "Voltar ao Menu Principal")
+    markup.add( "Voltar ao Menu Principal")
     bot.send_message(msg.chat.id, "Escolha uma região:", reply_markup=markup)
 
 @bot.message_handler(func=lambda msg: msg.text == "Realizar nova consulta")
 def nova_consulta(msg):
     menu_cobertura(msg)
 
-@bot.message_handler(func=lambda msg: msg.text == "Digitar estado manualmente")
-def pedir_estado_manual(msg):
-    user_states[msg.chat.id] = {"modo_cobertura": "estado"}
-    bot.send_message(msg.chat.id, "Digite a sigla do estado (ex: SP):")
-    bot.register_next_step_handler(msg, processar_estado)
-
-# -------------------------------------------------------
 # OPÇÃO 1 — POR ESTADO (fluxo original, apenas entry-point novo)
-# -------------------------------------------------------
-
-@bot.message_handler(func=lambda msg: msg.text == "Por Estado")
+@bot.message_handler(func=lambda msg: msg.text == "Estado")
 def cobertura_por_estado(msg):
     # Limpa modo para garantir fluxo de estado
     user_states[msg.chat.id] = {"modo_cobertura": "estado"}
     escolher_regiao(msg)
 
-# -------------------------------------------------------
 # OPÇÃO 2 — POR MUNICÍPIO
-# -------------------------------------------------------
-
-@bot.message_handler(func=lambda msg: msg.text == "Por Município")
+@bot.message_handler(func=lambda msg: msg.text == "Município")
 def cobertura_por_municipio_inicio(msg):
     # Guarda no estado do usuário que o próximo fluxo de região/estado
     # será para município
@@ -140,7 +125,6 @@ def escolher_regiao_municipio(msg):
 # Handler de regiões para fluxo de município
 # Necessário distinguir se o usuário está no fluxo "estado" ou "município".
 # A forma mais limpa: usar o campo user_states[chat_id]["modo_cobertura"].
-
 @bot.message_handler(func=lambda msg: msg.text in regioes.keys())
 def mostrar_estados_dispatch(msg):
     """Redireciona para o fluxo correto conforme o modo escolhido."""
@@ -160,7 +144,7 @@ def mostrar_estados_dispatch(msg):
 
     bot.send_message(msg.chat.id, "Escolha o estado:", reply_markup=markup)
 
-# Decide se vai consultar estado ou pedir município conforme o modo
+# Define consulta por estado ou município com base no modo
 @bot.message_handler(func=lambda msg: msg.text in sum(regioes.values(), []))
 def estado_selecionado_dispatch(msg):
     """Direciona para consulta por estado ou para pedir o município."""
@@ -197,16 +181,14 @@ def processar_municipio(msg):
     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     markup.add("Realizar nova consulta", "Voltar ao Menu Principal")
 
-    # Limpa o modo para não interferir em próximas consultas
+    # Reseta o modo para não interferir em próximas consultas
     user_states.pop(msg.chat.id, None)
 
     bot.send_message(msg.chat.id, resposta, reply_markup=markup, parse_mode="HTML")
 
-# -------------------------------------------------------
-# OPÇÃO 3 — RANKING DE ESTADOS
-# -------------------------------------------------------
 
-@bot.message_handler(func=lambda msg: msg.text == "🇧🇷 Ranking de Estados")
+# OPÇÃO 3 — RANKING DE ESTADOS
+@bot.message_handler(func=lambda msg: msg.text == "Ranking de Estados 🇧🇷")
 def cobertura_ranking(msg):
     bot.send_message(msg.chat.id, "🔎 Calculando ranking nacional... aguarde ⏳")
 
@@ -219,7 +201,7 @@ def cobertura_ranking(msg):
 
 @bot.message_handler(func=lambda msg: msg.text == "Voltar")
 def voltar_para_regioes(msg):
-    # Preserva o modo_cobertura se existir, volta só para a tela de regiões
+    # Preserva modo_cobertura caso exista, retorna para a tela de regiões
     modo = user_states.get(msg.chat.id, {}).get("modo_cobertura", "estado")
     if modo == "municipio":
         escolher_regiao_municipio(msg)
@@ -242,17 +224,7 @@ def processar_estado(msg):
     bot.send_message(msg.chat.id, resposta, reply_markup=markup, parse_mode="HTML")
 
     
-
-
-@bot.message_handler(func=lambda msg: msg.text == "Dashboard Cobertura Vacinal")
-def dashboard(msg):
-    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Voltar ao Menu Principal')
-    link = "https://app.powerbi.com/view?r=eyJrIjoiMjFmM2ViMWQtZGI0OS00NjJkLTkxYmQtMGI5MmYzYjliOWUzIiwidCI6ImNmNzJlMmJkLTdhMmItNDc4My1iZGViLTM5ZDU3YjA3Zjc2ZiIsImMiOjR9"
-    bot.send_message(msg.chat.id, f"<a href = '{link}'> Dashboard Cobertura Vacinal </a>", reply_markup=markup, parse_mode="HTML")
-
-# --- FLUXO DE LOCALIZAÇÃO (DESTAQUE DA SPRINT) ---
-
+# FLUXO DE LOCALIZAÇÃO
 @bot.message_handler(func=lambda msg: msg.text == "Unidades próximas")
 def pedir_localizacao(msg):
     start_drivers()
@@ -261,14 +233,14 @@ def pedir_localizacao(msg):
     markup.add(btn_gps, "Voltar ao Menu Principal")
     
     bot.send_message(msg.chat.id, 
-        "Para encontrar as UBS mais próximas, clique no botão abaixo para enviar seu GPS.", 
+        "Clique no botão abaixo para encontrar as UBS mais próximas.",
         reply_markup=markup)
 
 
 @bot.message_handler(content_types=['location'])
 def tratar_localizacao(msg):
 
-    bot.send_message(msg.chat.id,"🔎 Buscando UBS próximas… aguarde um instante",parse_mode="Markdown")
+    bot.send_message(msg.chat.id,"🔎 Buscando UBS próximas… aguarde um instante.",parse_mode="Markdown")
     try:
         lat = msg.location.latitude
         lon = msg.location.longitude
@@ -288,14 +260,7 @@ def tratar_localizacao(msg):
         print(f"Erro GPS: {e}")
         bot.send_message(msg.chat.id, "⚠️ Erro ao consultar o portal de saúde.")
 
-    except Exception as e:
-        print(f"Erro GPS: {e}")
-        bot.send_message(msg.chat.id, "⚠️ Erro ao consultar o portal de saúde.")
-
-
-
-# --- FLUXO DE VACINAS ---
-
+# FLUXO DE VACINAS
 @bot.message_handler(func=lambda msg: msg.text == "Vacinas")
 def filtrar_pesquisa(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
@@ -308,7 +273,6 @@ def pegar_idade(msg):
     bot.register_next_step_handler(msg, processar_dados)
 
 def processar_dados(msg):
-    # Mantendo sua lógica de cálculo de idade original
     sub_faixa = []
     data_texto = msg.text
     try:
@@ -374,8 +338,8 @@ def notificar(msg):
     )
 
     if proximas:
-        # Se veio do fluxo de IDADE, pegamos a primeira (mais próxima)
-        # Se veio do fluxo de GRUPO, 'proximas' contém a lista toda
+        # Vindo de fluxo de IDADE, pegamos a primeira (mais próxima)
+        # Vindo de fluxo de GRUPO, 'proximas' contém a lista toda
         if idade_atual is not None:
             proxima = proximas[0]
             texto = (
@@ -415,8 +379,7 @@ def finalizar_agendamento(msg, vacina_nome, data_proxima):
     bot.send_message(msg.chat.id, f"✅ Confirmado! Avisaremos em {email_user} sobre a vacina {vacina_nome}.")
     servicos(msg)
 
-# --- FAQ E ENCERRAMENTO ---
-
+# FAQ E ENCERRAMENTO
 @bot.message_handler(func=lambda msg: msg.text == "FAQ")
 def faq_menu(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
@@ -453,7 +416,7 @@ def servico_final(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     markup.add('Notificar Próxima Vacina','Encerrar', 'Continuar')
     bot.send_message(msg.chat.id, 'Deseja realizar outra consulta?', reply_markup=markup)
-# --- EXECUÇÃO ---
+# EXECUÇÃO
 
 if __name__ == "__main__":
     bot.remove_webhook()
