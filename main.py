@@ -54,6 +54,7 @@ def servicos(msg):
         'Início', 
         'Vacinas',
         'Cobertura Vacinal',
+        "Dashboard Cobertura Vacinal",
         'Unidades próximas', 
         'FAQ'
     )
@@ -242,6 +243,15 @@ def processar_estado(msg):
     bot.send_message(msg.chat.id, resposta, reply_markup=markup, parse_mode="HTML")
 
     
+
+
+@bot.message_handler(func=lambda msg: msg.text == "Dashboard Cobertura Vacinal")
+def dashboard(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add('Voltar ao Menu Principal')
+    link = "https://app.powerbi.com/view?r=eyJrIjoiMjFmM2ViMWQtZGI0OS00NjJkLTkxYmQtMGI5MmYzYjliOWUzIiwidCI6ImNmNzJlMmJkLTdhMmItNDc4My1iZGViLTM5ZDU3YjA3Zjc2ZiIsImMiOjR9"
+    bot.send_message(msg.chat.id, f"<a href = '{link}'> Dashboard Cobertura Vacinal </a>", reply_markup=markup, parse_mode="HTML")
+
 # --- FLUXO DE LOCALIZAÇÃO (DESTAQUE DA SPRINT) ---
 
 @bot.message_handler(func=lambda msg: msg.text == "Unidades próximas")
