@@ -97,16 +97,7 @@ def escolher_regiao(msg):
 def nova_consulta(msg):
     menu_cobertura(msg)
     
-#Conexão Dashboard
-@bot.message_handler(func=lambda msg: msg.text == "Dashboard Cobertura Vacinal")
-def dashboard(msg):
-    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Voltar ao Menu Principal')
-    link = "https://app.powerbi.com/view?r=eyJrIjoiMjFmM2ViMWQtZGI0OS00NjJkLTkxYmQtMGI5MmYzYjliOWUzIiwidCI6ImNmNzJlMmJkLTdhMmItNDc4My1iZGViLTM5ZDU3YjA3Zjc2ZiIsImMiOjR9"
-    bot.send_message(msg.chat.id, f"<a href = '{link}'> Dashboard Cobertura Vacinal </a>", reply_markup=markup, parse_mode="HTML")
-
-#teste
-
+#Dashboard
 @bot.message_handler(func=lambda msg: msg.text == "Dashboard")
 def dashboard(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
