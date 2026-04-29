@@ -45,17 +45,17 @@ def home():
 
 @bot.message_handler(commands=['start', 'help'])
 def comandos(msg):
-    # baixa dados de cobertura vacinal 
+    # baixa dados de cobertura vacinal
     threading.Thread(target=baixar_e_tratar_dados).start()
     servicos(msg)
 
 def servicos(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     markup.add(
-        'Início', 
+        'Início',
         'Vacinas',
         'Cobertura Vacinal',
-        'Unidades próximas', 
+        'Unidades próximas',
         'FAQ'
     )
     bot.send_message(msg.chat.id, 'Olá! Eu sou o Assistente Gotinha. Como posso te ajudar?', reply_markup=markup)
@@ -77,6 +77,7 @@ regioes = {
 def menu_cobertura(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     markup.add(
+        "Dashboard",
         "Estado",
         "Município",
         "Ranking de Estados 🇧🇷",
@@ -99,6 +100,13 @@ def escolher_regiao(msg):
 @bot.message_handler(func=lambda msg: msg.text == "Realizar nova consulta")
 def nova_consulta(msg):
     menu_cobertura(msg)
+
+@bot.message_handler(func=lambda msg: msg.text == "Dashboard")
+def dashboard(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add('Voltar ao Menu Principal')
+    link = "https://app.powerbi.com/view?r=eyJrIjoiMjFmM2ViMWQtZGI0OS00NjJkLTkxYmQtMGI5MmYzYjliOWUzIiwidCI6ImNmNzJlMmJkLTdhMmItNDc4My1iZGViLTM5ZDU3YjA3Zjc2ZiIsImMiOjR9"
+    bot.send_message(msg.chat.id, f"<a href = '{link}'> Dashboard Cobertura Vacinal </a>", reply_markup=markup, parse_mode="HTML")
 
 # OPÇÃO 1 — POR ESTADO (fluxo original, apenas entry-point novo)
 @bot.message_handler(func=lambda msg: msg.text == "Estado")
@@ -223,7 +231,7 @@ def processar_estado(msg):
 
     bot.send_message(msg.chat.id, resposta, reply_markup=markup, parse_mode="HTML")
 
-    
+
 # FLUXO DE LOCALIZAÇÃO
 @bot.message_handler(func=lambda msg: msg.text == "Unidades próximas")
 def pedir_localizacao(msg):
@@ -231,8 +239,8 @@ def pedir_localizacao(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     btn_gps = types.KeyboardButton("📍 Compartilhar minha localização atual", request_location=True)
     markup.add(btn_gps, "Voltar ao Menu Principal")
-    
-    bot.send_message(msg.chat.id, 
+
+    bot.send_message(msg.chat.id,
         "Clique no botão abaixo para encontrar as UBS mais próximas.",
         reply_markup=markup)
 
@@ -282,7 +290,7 @@ def processar_dados(msg):
 
         # Simplificação para o exemplo, use suas faixas de meses aqui
         id_site = "adulto" if idadeAnos >= 18 else "crianca"
-        
+
         dados_vacinas = scrap(id_site, sub_faixa)
 
         user_states[msg.chat.id] = {
@@ -319,7 +327,7 @@ def enviar_grupos(msg):
     except Exception:
         bot.reply_to(msg, 'Não encontramos dados.')
 
-@bot.message_handler(func=lambda msg: msg.text == "Notificar Próxima Vacina")    
+@bot.message_handler(func=lambda msg: msg.text == "Notificar Próxima Vacina")
 def notificar(msg):
     # 1. Recupera os dados (aqui você usaria sua lógica de estado ou banco)
     # idade_user pode ser um int (ex: 10) ou None (se foi por grupo)
@@ -333,7 +341,7 @@ def notificar(msg):
 
     # 2. Chama a lógica do notificador
     proximas = notificador.sugerir_vacinas(
-        data_vacinas=vacinas_do_scrap, 
+        data_vacinas=vacinas_do_scrap,
         idade_usuario=idade_atual
     )
 
@@ -352,17 +360,17 @@ def notificar(msg):
             bot.send_message(msg.chat.id, texto, parse_mode="Markdown")
             # Registra o próximo passo passando os dados da vacina específica
             bot.register_next_step_handler(msg, finalizar_agendamento, proxima['vacina'], proxima['periodo'])
-        
+
         else:
             # Fluxo por GRUPO: O usuário precisa escolher qual vacina da lista
             texto = "📋 Escolha qual dessas vacinas você deseja monitorar (digite o nome ou selecione):"
             # Aqui você poderia gerar botões dinâmicos com a lista de 'proximas'
-            markup = gerar_botoes_vacinas(proximas) 
+            markup = gerar_botoes_vacinas(proximas)
             bot.send_message(msg.chat.id, texto, reply_markup=markup)
-            
+
     else:
         bot.send_message(msg.chat.id, "Não encontrei vacinas pendentes para o seu perfil.")
-     
+
 def finalizar_agendamento(msg, vacina_nome, data_proxima):
     email_user = msg.text
     chat_id = msg.chat.id
@@ -374,7 +382,7 @@ def finalizar_agendamento(msg, vacina_nome, data_proxima):
     if "@" not in email_user:
         bot.send_message(chat_id, "❌ E-mail inválido. Tente clicar no botão novamente.")
         return
-    
+
     notificador.salvar_agendamento(msg.chat.id, email_user, vacina_nome, proxima)
     bot.send_message(msg.chat.id, f"✅ Confirmado! Avisaremos em {email_user} sobre a vacina {vacina_nome}.")
     servicos(msg)
@@ -420,7 +428,7 @@ def servico_final(msg):
 
 if __name__ == "__main__":
     bot.remove_webhook()
-    
+
     # Thread do Flask usando a variável 'app' definida no topo
     port = int(os.environ.get("PORT", 8080))
     t = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False))
@@ -430,6 +438,6 @@ if __name__ == "__main__":
     t_notifica = threading.Thread(target=notificador.loop_notificacao, args=(bot,))
     t_notifica.daemon = True
     t_notifica.start()
-    
+
     print("Bot Gotinha Ativado com Localização! 🚀")
     bot.infinity_polling()
