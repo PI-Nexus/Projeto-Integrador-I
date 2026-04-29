@@ -1,11 +1,16 @@
-
-
 import os
 from bs4 import BeautifulSoup
 import requests
 
 
 def save_as_file():
+    """
+      Realiza o download da página de calendário de vacinação do Ministério da Saúde
+      e salva o conteúdo HTML localmente.
+
+      A função cria o diretório 'data' caso não exista e salva o conteúdo
+      em 'data/scrap.txt'.
+    """
     os.makedirs('data',exist_ok=True)
     url = 'https://www.gov.br/saude/pt-br/vacinacao/calendario'
     response = requests.get(url, timeout=10)
@@ -14,9 +19,14 @@ def save_as_file():
 
 
 
-# --- FUNÇÃO DE SCRAPING (MANTIDA) ---
+# FUNÇÃO DE SCRAPING
 
+"""
+grupo_id: ID do grupo no HTML (ex: crianças, adolescentes, etc.)
+periodo: Lista opcional de períodos a serem filtrados
+"""
 def scrap(grupo_id,periodo:list | None = None):
+    #Realiza o scraping do calendário de vacinação a partir do HTML salvo localmente.
     try:
         save_as_file()
         with open('data/scrap.txt', 'r', encoding='utf-8') as scrap_file:
@@ -70,7 +80,7 @@ def scrap(grupo_id,periodo:list | None = None):
         return None
 
 
-# --- FORMATAÇÃO (MANTIDA) ---
+# FORMATAÇÃO
 def formatar_mensagem_bot(dados_json):
     if dados_json is None:
         return "❌ Erro ao acessar o site do Ministério da Saúde."
