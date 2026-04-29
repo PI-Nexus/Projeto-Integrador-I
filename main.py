@@ -18,13 +18,9 @@ from src.scrap_cobertura import (
     calcular_media_estados,
     baixar_e_tratar_dados,
 )
-from src.buscar_postos import (
-    buscar_postos_proximos,
-    threading_search,
-    start_drivers,
-)
-from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo
-import src.notificador as notificador
+from src.buscar_postos import buscar_postos_proximos,threading_search,start_drivers
+import src.notify as notify
+from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo, definir_categoria_por_idade, converter_periodo_para_meses
 
 
 # 1. Configurações Iniciais
@@ -281,10 +277,8 @@ def pegar_idade(msg):
     bot.register_next_step_handler(msg, processar_dados)
 
 def processar_dados(msg):
-    sub_faixa = []
-    data_texto = msg.text
     try:
-        data_nascimento = datetime.strptime(data_texto, "%d/%m/%Y")
+        data_nascimento = datetime.strptime(msg.text, "%d/%m/%Y")
         hoje = datetime.now()
         idadeAnos = hoje.year - data_nascimento.year - ((hoje.month, hoje.day) < (data_nascimento.month, data_nascimento.day))
 
@@ -294,15 +288,16 @@ def processar_dados(msg):
         dados_vacinas = scrap(id_site, sub_faixa)
 
         user_states[msg.chat.id] = {
-            'idade': idadeAnos,
-            'vacinas': dados_vacinas
+            'data_nasc': data_nascimento,
+            'vacinas': vacinas_exibicao,
+            'indice_atual': 0
         }
 
-        mensagem_final = formatar_mensagem_bot(dados_vacinas)
-        bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown")
-        servico_final(msg)
+        # Chamada dos botões
+        exibir_vacina_atual(msg.chat.id, 0)
+
     except Exception as e:
-        bot.reply_to(msg, "⚠️ Formato inválido ou erro no processamento.")
+        bot.reply_to(msg, "⚠️ Erro ao processar. Certifique-se de usar DD/MM/AAAA.")
 
 @bot.message_handler(func=lambda msg: msg.text == "Grupo")
 def grupos(msg):
@@ -315,15 +310,12 @@ def enviar_grupos(msg):
     id_site = msg.text.lower()
     try:
         dados_vacinais = scrap(id_site)
-        #print(dados_vacinais)
         user_states[msg.chat.id] = {
-            'idade': None,
-            'vacinas': dados_vacinais
+            'data_nasc': datetime.now(),
+            'vacinas': dados_vacinais,
+            'indice_atual': 0
         }
-        mensagem_final = formatar_mensagem_bot(dados_vacinais)
-        bot.send_message(msg.chat.id, mensagem_final, parse_mode="Markdown")
-        # Opção notificação vacina mais próxima
-        servico_final(msg)
+        exibir_vacina_atual(msg.chat.id, 0)
     except Exception:
         bot.reply_to(msg, 'Não encontramos dados.')
 
@@ -336,8 +328,12 @@ def notificar(msg):
         bot.send_message(msg.chat.id, "Por favor, informe sua idade ou grupo primeiro.")
         return
 
-    idade_atual = dados['idade']
-    vacinas_do_scrap = dados['vacinas']
+    vacinas = dados['vacinas']
+    
+    if indice >= len(vacinas):
+        bot.send_message(chat_id, "✅ Você já visualizou todas as opções disponíveis!")
+        servico_final_manual(chat_id)
+        return
 
     # 2. Chama a lógica do notificador
     proximas = notificador.sugerir_vacinas(
@@ -375,9 +371,12 @@ def finalizar_agendamento(msg, vacina_nome, data_proxima):
     email_user = msg.text
     chat_id = msg.chat.id
 
-    dados = user_states.get(chat_id)
-    data_nasc = dados.get('data_nasc')
-    proxima = calcular_data_alvo(data_nasc, data_proxima)
+    texto = (f"📍 *Opção {indice + 1} de {len(vacinas)}*\n\n"
+             f"💉 *Vacina:* {v['vacina']}\n"
+             f"📅 *Recomendação:* {v['periodo']}\n\n"
+             "Deseja agendar um lembrete ou ver a próxima?")
+    
+    bot.send_message(chat_id, texto, parse_mode="Markdown", reply_markup=markup)
 
     if "@" not in email_user:
         bot.send_message(chat_id, "❌ E-mail inválido. Tente clicar no botão novamente.")
