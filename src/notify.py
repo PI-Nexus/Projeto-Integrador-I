@@ -93,4 +93,4 @@ def loop_notificacao(bot):
         except Exception as e:
             print(f"Erro no loop: {e}")
         
-        time.sleep(10)
+        time.sleep(3600)
