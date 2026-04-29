@@ -2,9 +2,7 @@ from playwright.sync_api import sync_playwright
 import time
 
 def buscar_ubs_cnes(municipio, uf):
-    """
-    Realiza o scraping no portal CNES para encontrar UBS de uma cidade.
-    """
+    #Realiza o scraping no portal CNES para encontrar UBS de uma cidade.
     with sync_playwright() as p:
         # Lançamos o navegador (headless=True para não abrir janela no servidor)
         browser = p.chromium.launch(headless=True)

@@ -1,23 +1,31 @@
-import pandas as pd
+# Bibliotecas padrão (Python)
+import os
 import math
 import threading
+from threading import Lock
+
+
+# Bibliotecas externas
+import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.options import Options
-import os
+
 
 options = Options()
-options.add_argument("--headless=new")
+options.add_argument("--headless=new") # roda Chrome sem interface gráfica
+options.add_argument("--disable-dev-shm-usage") # Evita problemas com memória compartilhada r
+options.add_argument("--no-sandbox") # Desativa o sandbox de segurança do Chrome
 
-# ------------------ CARREGAR CSV ------------------
+lock=Lock()
+# CARREGAR CSV
 
-caminho = "Unidade_basica_de_saude.csv"
-
+arquivo = "Unidade_basica_de_saude.csv"
 
 base_dir = os.path.dirname(__file__)
-caminho = os.path.join(base_dir, "Unidade_basica_de_saude.csv")
+caminho = os.path.join(base_dir, arquivo)
 
 
 df = pd.read_csv(caminho, sep=";")
@@ -25,7 +33,7 @@ df = pd.read_csv(caminho, sep=";")
 # Corrigir espaços nos nomes das colunas
 df.columns = df.columns.str.strip()
 
-# ------------------ LIMPEZA ------------------
+# TRATAMENTO DE DADOS
 
 # Corrigir longitude (trocar vírgula por ponto)
 df["LONGITUDE"] = df["LONGITUDE"].astype(str).str.replace(",", ".")
@@ -57,12 +65,13 @@ df["LATITUDE"] = df["LATITUDE"].apply(corrigir_lat)
 df["LATITUDE"] = pd.to_numeric(df["LATITUDE"], errors="coerce")
 df["LONGITUDE"] = pd.to_numeric(df["LONGITUDE"], errors="coerce")
 
-# Remover inválidos
+# Remover dados inválidos
 df = df.dropna(subset=["LATITUDE", "LONGITUDE"])
 
 
-# ------------------ DISTÂNCIA ------------------
+#  DISTÂNCIA
 
+#  Calcula a distância entre dois pontos geográficos usando a fórmula de Haversine.
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371
 
@@ -74,10 +83,9 @@ def haversine(lat1, lon1, lat2, lon2):
 
     return R * c
 
-# ------------------ BUSCA ------------------
+#  BUSCA
 
-
-
+#Busca os postos mais próximos de um usuário com base na latitude e longitude.
 def buscar_postos_proximos(user_lat, user_lon):
     df_local = df[
         (df["LATITUDE"].between(user_lat - 0.5, user_lat + 0.5)) &
@@ -99,9 +107,8 @@ def buscar_postos_proximos(user_lat, user_lon):
     resultados.sort(key=lambda x: x["distancia"])
     return resultados[:4]
 # ------------------ TESTE ------------------
-links={}
 
-def retorno_link_maps(data,driver):
+def retorno_link_maps(data,driver,links):
     try:
         lat_ubs, lon_ubs = data['lat'], data['lon']
         name=str(data['nome']).title().replace(" ", "+")
@@ -119,30 +126,37 @@ def retorno_link_maps(data,driver):
         WebDriverWait(driver, 10).until(
             lambda d: d.current_url != url
         )
-        links[data['nome']]= driver.current_url
-        driver.quit()
-
+        # Adiciona link a uma variavel global (links)
+        with lock:
+            links[data['nome']]= driver.current_url
     except:
         return None
 
-drivers=[]
+# inicializa drivers e impede ativação paralela da função start_drivers()
+drivers = []
+initializing = False
 def start_drivers():
-    global drivers
-    drivers=[
-        webdriver.Chrome(),
-        webdriver.Chrome(),
-        webdriver.Chrome(),
-        webdriver.Chrome()]
+    global drivers, initializing
 
+    if drivers or initializing:
+        return
 
+    initializing = True
+    drivers = [
+        webdriver.Chrome(options=options),
+        webdriver.Chrome(options=options),
+        webdriver.Chrome(options=options),
+        webdriver.Chrome(options=options)
+    ]
+    initializing = False
 
 def threading_search(postos):
-
+    links={}
     t1,t2,t3,t4=(
-    threading.Thread(target=retorno_link_maps,args=(postos[0],drivers[0])),
-    threading.Thread(target=retorno_link_maps,args=(postos[1],drivers[1])),
-    threading.Thread(target=retorno_link_maps,args=(postos[2],drivers[2])),
-    threading.Thread(target=retorno_link_maps,args=(postos[3],drivers[3])))
+    threading.Thread(target=retorno_link_maps,args=(postos[0],drivers[0],links)),
+    threading.Thread(target=retorno_link_maps,args=(postos[1],drivers[1],links)),
+    threading.Thread(target=retorno_link_maps,args=(postos[2],drivers[2],links)),
+    threading.Thread(target=retorno_link_maps,args=(postos[3],drivers[3],links)))
 
     t1.start(),t2.start(),t3.start(),t4.start()
 
@@ -150,4 +164,7 @@ def threading_search(postos):
     t2.join()
     t3.join()
     t4.join()
+    for driver in drivers:
+        driver.quit()
+    drivers.clear()
     return links

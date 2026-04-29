@@ -1,20 +1,25 @@
+# Bibliotecas padrão
+import os
+import time
+import re
+import html
+
+# Bibliotecas externas
+import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import pandas as pd
-import os
-import time
-import html
-import re
+
 
 # cache em memória
 df_global = None
 info_atualizacao_global = None
 
-def baixar_e_tratar_dados():
+barra='-'*40
 
+def baixar_e_tratar_dados():
     pasta_download = os.path.abspath("downloads")
     global df_global, info_atualizacao_global
 
@@ -161,7 +166,7 @@ def buscar_cobertura_estado(estado):
         nome_estado = html.escape(estados.get(estado, estado))
 
         resposta = f"<b>📍 COBERTURA VACINAL — {nome_estado} ({estado})</b>\n"
-        resposta += "──────────────────────────\n\n"
+        resposta += f"{barra}\n\n"
 
         valores = []
 
@@ -185,7 +190,7 @@ def buscar_cobertura_estado(estado):
         if alertas > 0:
             resposta += f"⚠️ Em atenção: <b>{alertas}</b>\n"
 
-        resposta += "\n──────────────────────────\n"
+        resposta += f"\n{barra}\n"
         resposta += "<b>Detalhamento por vacina</b>\n"
 
         # Lista detalhada
@@ -212,17 +217,18 @@ def buscar_cobertura_estado(estado):
                     coluna_segura = html.escape(coluna_tratada)
 
                     # define se precisa quebrar linha (nomes longos)
-                    nome_longo = len(coluna_segura) > 35
+                    resposta += "<b>Indicadores gerais</b>\n"
+                    resposta += f"Média de cobertura: <b>{media}%</b>\n"
 
-                    if nome_longo:
-                        resposta += f"{cor} {coluna_segura}\n"
-                        resposta += f"      <b>{percentual}%</b> {status}\n"
-                    else:
-                        nome_formatado = coluna_segura.ljust(40, ".")
-                        resposta += f"{cor} {nome_formatado} <b>{percentual}%</b> {status}\n"
+
+                    resposta += f"\n{barra}\n"
+                    resposta += "<b>Detalhamento por vacina</b>\n"
+
+                    resposta += f"{cor} {coluna_segura}: \n"
+                    resposta += f"<b>{percentual}%</b> {status}\n\n"
 
         # fechamento
-        resposta += "\n──────────────────────────\n"
+        resposta += f"\n{barra}\n"
         resposta += "<b>Referência técnica</b>\n"
         resposta += "Cobertura ideal recomendada: <b>acima de 90%</b>\n"
 
@@ -241,7 +247,7 @@ def buscar_cobertura_estado(estado):
         
         global info_atualizacao_global
         if info_atualizacao_global:
-            resposta += "\n──────────────────────────\n"
+            resposta += f"\n{barra}\n"
             resposta += "<b>Ùltima atualização dos dados</b>\n"
             resposta += f"{info_atualizacao_global} \nFonte: Rede Nacional de Dados em Saúde (RNDS)\n"
     
@@ -344,7 +350,7 @@ def buscar_cobertura_municipio(estado, municipio):
     municipio_seguro = html.escape(municipio_busca)
 
     resposta = f"<b>📍 COBERTURA VACINAL — {municipio_seguro} / {nome_estado}</b>\n"
-    resposta += "──────────────────────────\n\n"
+    resposta += f"{barra}\n\n"
 
     valores = []
     for coluna in df.columns:
@@ -370,7 +376,7 @@ def buscar_cobertura_municipio(estado, municipio):
     if alertas > 0:
         resposta += f"⚠️ Em atenção: <b>{alertas}</b>\n"
 
-    resposta += "\n──────────────────────────\n"
+    resposta += f"\n{barra}\n"
     resposta += "<b>Detalhamento por vacina</b>\n"
 
     for coluna in df.columns:
@@ -391,16 +397,13 @@ def buscar_cobertura_municipio(estado, municipio):
 
                 coluna_segura = html.escape(tratar_nome_vacina(coluna))
 
-                if len(coluna_segura) > 35:
-                    resposta += f"{cor} {coluna_segura}\n      <b>{percentual}%</b> {status}\n"
-                else:
-                    resposta += f"{cor} {coluna_segura.ljust(40, '.')} <b>{percentual}%</b> {status}\n"
+                resposta += f"{cor} {coluna_segura}: <b>{percentual}%</b> {status}\n\n"
 
-    resposta += "\n──────────────────────────\n"
+    resposta += f"\n{barra}\n"
     resposta += "Cobertura ideal recomendada: <b>acima de 90%</b>\n"
 
     if info_atualizacao_global:
-        resposta += "\n──────────────────────────\n"
+        resposta += f"\n{barra}\n"
         resposta += f"{info_atualizacao_global}\nFonte: RNDS\n"
 
     return resposta
@@ -455,7 +458,7 @@ def calcular_media_estados():
         return "⚠️ Não foi possível calcular o ranking."
 
     resposta = "<b>🇧🇷 COBERTURA VACINAL — RANKING POR ESTADO</b>\n"
-    resposta += "──────────────────────────\n\n"
+    resposta += f"{barra}\n\n"
 
     medalhas = {1: "🥇", 2: "🥈", 3: "🥉"}
 
@@ -463,14 +466,16 @@ def calcular_media_estados():
         prefixo = medalhas.get(i, f"{i:>2}.")
         nome = estados.get(uf, uf)
         cor = "🔴" if media < 60 else ("🟡" if media < 75 else "🟢")
-        resposta += f"{prefixo} {cor} {uf} — {html.escape(nome)}: <b>{media}%</b>\n"
+        resposta += f"{prefixo} {cor} {uf} — {html.escape(nome)}: <b>{media}%</b>\n\n"
 
     media_geral = round(sum(m for _, m in resultado) / len(resultado), 2)
-    resposta += "\n──────────────────────────\n"
+    resposta += f"\n{barra}\n"
     resposta += f"<b>Média geral Brasil: {media_geral}%</b>\n"
 
     if info_atualizacao_global:
-        resposta += "\n──────────────────────────\n"
+        resposta += f"\n{barra}\n"
         resposta += f"{info_atualizacao_global}\nFonte: RNDS\n"
 
     return resposta
+
+
