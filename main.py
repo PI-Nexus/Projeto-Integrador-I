@@ -21,7 +21,7 @@ from src.scrap_cobertura import (
 )
 from src.buscar_postos import buscar_postos_proximos,threading_search,start_drivers
 import src.notify as notify
-from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo, definir_categoria_por_idade, converter_periodo_para_meses
+from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo, definir_categoria_por_idade, converter_periodo_para_meses, validar_data
 
 
 # 1. Configurações Iniciais
@@ -446,21 +446,59 @@ def finalizar_agendamento_lista(msg, lista_vacinas):
     chat_id = msg.chat.id
     email = msg.text.strip()
 
+    # Validação de E-mail
     regex_pattern = r'^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
-
     if not re.fullmatch(regex_pattern, email, re.IGNORECASE):
         bot.send_message(chat_id, "❌ E-mail inválido. Digite novamente:")
         bot.register_next_step_handler(msg, finalizar_agendamento_lista, lista_vacinas)
         return
 
-    data_nasc = user_states.get(chat_id, {}).get('data_nasc', datetime.now())
+    # Inicia o fluxo de perguntar as datas para cada vacina
+    perguntar_data_vacina(msg, email, lista_vacinas, 0)
 
-    for v in lista_vacinas:
-        data_alvo = notify.calcular_data_alvo(data_nasc, v['periodo'])
-        notify.salvar_agendamento(chat_id, email, v['vacina'], data_alvo)
+def perguntar_data_vacina(msg, email, lista_vacinas, index):
+    chat_id = msg.chat.id
+    
+    # Se já percorreu toda a lista, encerra
+    if index >= len(lista_vacinas):
+        bot.send_message(chat_id, "✅ Todas as vacinas foram agendadas com sucesso!", reply_markup=types.ReplyKeyboardRemove())
+        servicos(msg)
+        return
 
-    bot.send_message(chat_id, "✅ Vacinas agendadas com sucesso!")
-    servico_final(msg)
+    vacina_atual = lista_vacinas[index]
+    bot.send_message(
+        chat_id, 
+        f"📅 Para qual data deseja agendar a vacina: *{vacina_atual['vacina']}*?\n(Formato: DD/MM/AAAA)", 
+        parse_mode="Markdown"
+    )
+    
+    # Registra o próximo passo passando o e-mail, a lista e o índice atual
+    bot.register_next_step_handler(msg, processar_data_e_proxima, email, lista_vacinas, index)
+
+def processar_data_e_proxima(msg, email, lista_vacinas, index):
+    chat_id = msg.chat.id
+    data_texto = msg.text
+    data_alvo = validar_data(data_texto)
+    hoje = datetime.now().date() # Pega apenas a data atual (sem horas)
+
+    # 1. Validação de Formato (Já existente)
+    if not data_alvo:
+        bot.send_message(chat_id, "⚠️ Formato inválido! Digite a data como DD/MM/AAAA (ex: 20/05/2024):")
+        bot.register_next_step_handler(msg, processar_data_e_proxima, email, lista_vacinas, index)
+        return
+
+    # 2. Validação de Data Retroativa (Nova)
+    if data_alvo.date() < hoje:
+        bot.send_message(chat_id, "⏳ Ops! Você digitou uma data que já passou. Por favor, insira uma data futura para o agendamento:")
+        bot.register_next_step_handler(msg, processar_data_e_proxima, email, lista_vacinas, index)
+        return
+
+    # Se passou nas validações, salva e segue para a próxima
+    vacina_atual = lista_vacinas[index]
+    notify.salvar_agendamento(chat_id, email, vacina_atual['vacina'], data_alvo)
+
+    # Próxima vacina da lista
+    perguntar_data_vacina(msg, email, lista_vacinas, index + 1)
 
 def servico_final_manual(chat_id):
     """Versão da servico_final que aceita chat_id direto"""
