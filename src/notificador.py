@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from email.message import EmailMessage
 import src.auxiliares
 
+
 # Caminho seguindo o seu padrão da pasta data/
 DATA_DIR = 'data'
 CSV_PATH = os.path.join(DATA_DIR, 'agendamentos.csv')

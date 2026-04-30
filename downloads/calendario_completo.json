@@ -1,0 +1,1160 @@
+[
+    {
+        "vacina": "Vacinas",
+        "categoria": "adolescente",
+        "texto_original": "Esquemas e recomendações",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Gratuitas nas UBS*",
+        "categoria": "adolescente",
+        "texto_original": "Serviços privados de vacinação",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "HPV",
+        "categoria": "adolescente",
+        "texto_original": "• Duas vacinas estão disponíveis no Brasil, HPV4 e HPV9. A SBIm, com o intuito de ampliar a proteção para os tipos adicionais, recomenda, sempre que possível, o uso preferencial da vacina HPV9 em duas doses, assim como a revacinação daqueles anteriormente vacinados com HPV2 ou HPV4. Na impossibilidade do uso de HPV9, a HPV4 deve ser recomendada e está disponível gratuitamente nas UBS para meninas e meninos de 9 a 14 anos em dose única. • Esquema para não vacinados anteriormente: Adolescentes menores de 20 anos – duas doses com intervalo de seis meses entre elas (0-6 meses). • Para revacinação ou para dar sequência a esquemas iniciados com vacinas HPV2 ou HPV4, consulte posicionamento SBIm: https://sbim.org.br/images/files/notas-tecnicas/informe-sbim-esclarecimentos-vacinas-hpv-240415-v2.pdf",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Tríplice bacteriana acelular do tipo adulto (difteria, tétano e coqueluche) – dTpa ou dTpa-VIP Dupla adulto (difteria e tétano) – dT",
+        "categoria": "adolescente",
+        "texto_original": "Com esquema de vacinação completo, incluindo a dose dos 9-11 anos: dose de reforço, preferencialmente com dTpa, dez anos após a última. Com esquema de vacinação incompleto: uma dose de dTpa a qualquer momento e completar a vacinação básica com dT (dupla bacteriana do tipo adulto) de forma a totalizar três doses de vacina contendo o componente tetânico. Não vacinados e/ou histórico vacinal desconhecido: uma dose de dTpa e duas doses de dT no esquema 0-2-4 a 8 meses.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": false,
+            "intervalo_entre_doses": [
+                {
+                    "de_dose": 1,
+                    "para_dose": 2,
+                    "intervalo_dias": 730,
+                    "intervalo_texto": "2 anos"
+                }
+            ],
+            "reforcos": [
+                "Reforço, preferencialmente com dtpa, dez anos após a última."
+            ]
+        }
+    },
+    {
+        "vacina": "Influenza (gripe)",
+        "categoria": "adolescente",
+        "texto_original": "• Dose única anual. • Em adolescentes com fatores de risco e em situação epidemiológica que justifique, pode ser considerada uma segunda dose, a partir de 3 meses após a dose anual.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Meningocócica conjugada ACWY ou C",
+        "categoria": "adolescente",
+        "texto_original": "• Para vacinados na infância: reforço aos 11 anos ou cinco anos após a última dose. • Para não vacinados até 15 anos, duas doses com intervalo de cinco anos, a partir de 16 anos, uma dose.",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": [
+                "Reforço aos 11 anos ou 5 anos após a última dose."
+            ]
+        }
+    },
+    {
+        "vacina": "Meningocócica B",
+        "categoria": "adolescente",
+        "texto_original": "Duas doses com intervalo mínimo de um mês (Bexsero®).",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Covid-19",
+        "categoria": "adolescente",
+        "texto_original": "pelo PNI em https://www.gov.br/saude/pt-br/assuntos/covid-19",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Tríplice viral (sarampo, caxumba e rubéola)",
+        "categoria": "adolescente",
+        "texto_original": "• Duas doses acima de 1 ano de idade, com intervalo mínimo de um mês entre elas. • Para adolescentes com esquema completo, não há evidências que justifiquem uma terceira dose como rotina, podendo ser considerada em situações de risco epidemiológico, como surtos de caxumba e/ou sarampo.",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Varicela (catapora)",
+        "categoria": "adolescente",
+        "texto_original": "Para suscetíveis: duas doses. Para menores de 13 anos: intervalo de três meses. A partir de 13 anos: intervalo de um a dois meses.",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Hepatites A, B ou A e B",
+        "categoria": "adolescente",
+        "texto_original": "Hepatite A: duas doses, no esquema 0-6 meses.",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [
+                {
+                    "de_dose": 1,
+                    "para_dose": 2,
+                    "intervalo_dias": 180,
+                    "intervalo_texto": "6 mes"
+                }
+            ],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Hepatite B: três doses, esquema 0-1-6 meses.",
+        "categoria": "adolescente",
+        "texto_original": "SIM",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Hepatite A e B: para menores de 16 anos: duas doses aos 0-6 meses. A partir de 16 anos: três doses aos 0-1-6 meses.",
+        "categoria": "adolescente",
+        "texto_original": "NÃO",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Febre amarela",
+        "categoria": "adolescente",
+        "texto_original": "• Recomendação do PNI: se recebeu a primeira dose antes dos 5 anos, indicada uma segunda dose, independentemente da idade atual. Se aplicada a partir dos 5 anos de idade: dose única. • Recomendação da SBIm: Duas doses. Como há possibilidade de falha vacinal, está recomendada uma segunda dose com intervalo de 10 anos. • Essa vacina pode ser exigida para emissão do CIVP, atendendo exigências sanitárias de alguns destinos internacionais. Neste caso, deve ser aplicada até dez dias antes de viajar.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Dengue*",
+        "categoria": "adolescente",
+        "texto_original": "• Qdenga® é preferencial por poder ser utilizada independente de contato prévio com o vírus da dengue. Esquema de duas doses com intervalo de três meses entre elas (0-3 meses).",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [
+                {
+                    "de_dose": 1,
+                    "para_dose": 2,
+                    "intervalo_dias": 90,
+                    "intervalo_texto": "3 mes"
+                }
+            ],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Vacinas",
+        "categoria": "adulto",
+        "texto_original": "Esquemas e recomendações",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Gratuitas nas UBS*",
+        "categoria": "adulto",
+        "texto_original": "Serviços privados de vacinação",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Tríplice bacteriana acelular do tipo adulto (difteria, tétano e coqueluche) – dTpa ou dTpa-VIP Dupla adulto (difteria e tétano) – dT",
+        "categoria": "adulto",
+        "texto_original": "Atualizar dTpa independente de intervalo prévio com dT ou TT. Com esquema de vacinação básico completo: reforço com dTpa a cada dez anos. Com esquema de vacinação básico incompleto: uma dose de dTpa a qualquer momento e completar a vacinação básica com dT (dupla bacteriana do tipo adulto) de forma a totalizar três doses de vacina contendo o componente tetânico. Não vacinados e/ou histórico vacinal desconhecido: uma dose de dTpa e duas doses de dT no esquema 0-2-4 a 8 meses. Para indivíduos que pretendem viajar para países nos quais a poliomielite é endêmica: recomenda-se a vacina dTpa combinada à pólio inativada (dTpa-VIP). A dTpa-VIP pode substituir a dTpa.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Influenza (gripe)",
+        "categoria": "adulto",
+        "texto_original": "• Dose única anual. • Em adultos com fatores de risco e em situação epidemiológica que justifique, pode ser considerada uma segunda dose, a partir de 3 meses após a dose anual.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Pneumocócicas",
+        "categoria": "adulto",
+        "texto_original": "Rotina a partir dos 50 anos de idade. Esquema: VPC20 em dose única.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Herpes zóster",
+        "categoria": "adulto",
+        "texto_original": "• Rotina a partir de 50 anos. • Esquema: Vacina inativada (VZR) – duas doses com intervalo de dois meses (0-2).",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Tríplice viral (sarampo, caxumba e rubéola)",
+        "categoria": "adulto",
+        "texto_original": "• Duas doses acima de 1 ano de idade, com intervalo mínimo de um mês entre elas. • Para adultos com esquema completo, não há evidências que justifiquem uma terceira dose como rotina, podendo ser considerada em situações de risco epidemiológico, como surtos de caxumba e/ou sarampo.",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Varicela (catapora)",
+        "categoria": "adulto",
+        "texto_original": "Para suscetíveis: duas doses com intervalo de um a dois meses.",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Hepatites A, B ou A e B",
+        "categoria": "adulto",
+        "texto_original": "Hepatite A: duas doses, no esquema 0-6 meses.",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [
+                {
+                    "de_dose": 1,
+                    "para_dose": 2,
+                    "intervalo_dias": 180,
+                    "intervalo_texto": "6 mes"
+                }
+            ],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Hepatite B: três doses, no esquema 0-1-6 meses.",
+        "categoria": "adulto",
+        "texto_original": "SIM",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Hepatite A e B: três doses, no esquema 0-1-6 meses.",
+        "categoria": "adulto",
+        "texto_original": "NÃO",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "HPV",
+        "categoria": "adulto",
+        "texto_original": "• Duas vacinas estão disponíveis no Brasil, HPV4 e HPV9. A SBIm, com o intuito de ampliar a proteção para os tipos adicionais, recomenda, sempre que possível, o uso preferencial da vacina HPV9 em três doses, assim como a revacinação daqueles anteriormente vacinados com HPV2 ou HPV4. • Adultos com 20 anos ou mais, não vacinados anteriormente: três doses da HPV9 (0-1 a 2-6 meses). • Para revacinação ou para dar sequência a esquemas iniciados com vacinas HPV2 ou HPV4 consulte posicionamento SBIm: https://sbim.org.br/images/files/notas-tecnicas/informe-sbim-esclarecimentos-vacinas-hpv-240415-v2.pdf",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [
+                {
+                    "de_dose": 1,
+                    "para_dose": 2,
+                    "intervalo_dias": 120,
+                    "intervalo_texto": "4 mes"
+                }
+            ],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Meningocócicas conjugadas ACWY ou C",
+        "categoria": "adulto",
+        "texto_original": "Uma dose. A indicação da vacina, assim como a necessidade de reforços, dependerão da situação epidemiológica.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Meningocócica B",
+        "categoria": "adulto",
+        "texto_original": "• A indicação dependerá da situação epidemiológica. • Duas doses com intervalo mínimo de 1 mês (Bexsero®). • Não se conhece a duração da proteção conferida e, consequentemente, a necessidade de dose(s) de reforço.",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Febre amarela",
+        "categoria": "adulto",
+        "texto_original": "• Recomendação do PNI: se recebeu a primeira dose antes dos 5 anos, indicada uma segunda dose, independentemente da idade atual. Se aplicada a partir dos 5 anos de idade: dose única. • Recomendação da SBIm: Duas doses. Como há possibilidade de falha vacinal, está recomendada uma segunda dose com intervalo de 10 anos. • Essa vacina pode ser exigida para emissão do CIVP, atendendo exigências sanitárias de alguns destinos internacionais. Neste caso, deve ser aplicada até dez dias antes de viajar.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Dengue",
+        "categoria": "adulto",
+        "texto_original": "• Qdenga® pode ser utilizada em adultos até 60 anos independente de contato prévio com o vírus da dengue. Esquema de duas doses com intervalo de três meses entre elas (0-3 meses).",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [
+                {
+                    "de_dose": 1,
+                    "para_dose": 2,
+                    "intervalo_dias": 90,
+                    "intervalo_texto": "3 mes"
+                }
+            ],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Vírus Sincicial Respiratório",
+        "categoria": "adulto",
+        "texto_original": "• Duas vacinas disponíveis: Arexvy® (GSK) e Abrysvo® (Pfizer), no esquema de uma dose, IM. • A partir dos 18 anos de idade recomendadas para pessoas com doenças cardiovasculares ou respiratórias crônicas clinicamente relevantes, pelo risco de evolução grave ou descompensação, priorizando insuficiência cardíaca, doença coronariana, DPOC, asma moderada/grave e imunodeficiências moderadas/graves, especialmente se fragilizadas, acamadas e/ou residentes em instituições de longa permanência. Em diabetes, doença hepática crônica, obesidade, condições neurológicas, entre outras comorbidades de risco, a vacinação poderá ser considerada à critério médico. Ver recomendações no Calendário de vacinação SBIm pacientes especiais • Não há dados disponíveis que comprovem a necessidade de doses adicionais. • Somente a vacina Abrysvo® (Pfizer) está licenciada para gestantes. Deve ser aplicada em gestantes de qualquer idade, a partir de 28 semanas de gestação, a cada gestação. Uso entre 24 e 27 semanas de IG a critério médico.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Covid-19",
+        "categoria": "adulto",
+        "texto_original": "pelo PNI em https://www.gov.br/saude/pt-br/assuntos/covid-19",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Vacinas",
+        "categoria": "idoso",
+        "texto_original": "Quando indicar",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Gratuitas nas UBS*",
+        "categoria": "idoso",
+        "texto_original": "Serviços privados de vacinação",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Influenza (gripe)",
+        "categoria": "idoso",
+        "texto_original": "Dose única anual, preferencialmente com a vacina trivalente de alta concentração (high dose, HD3V). Na impossibilidade, usar a vacina disponível (3V ou 4V) e, nesses casos, em situação epidemiológica de risco, considerar uma segunda dose a partir de três meses após a dose anual.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Pneumocócicas conjugadas VPC20, VPC15 ou VPC13 e polissacarídica VPP23",
+        "categoria": "idoso",
+        "texto_original": "• VPC20 em dose única ou • Somente no CRIE e em algumas situações especiais ainda disponível o esquema sequencial, iniciando com VPC13 seguida de uma dose de VPP23 após dois meses no mínimo, e uma segunda dose de VPP23 cinco anos após a primeira.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Herpes zóster",
+        "categoria": "idoso",
+        "texto_original": "Se não vacinado aos 50, a qualquer momento.",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Tríplice bacteriana acelular do tipo adulto (difteria, tétano e coqueluche) – dTpa ou dTpa-VIP Dupla adulto (difteria e tétano) – dT",
+        "categoria": "idoso",
+        "texto_original": "Atualizar dTpa independente de intervalo prévio com dT ou TT. Com esquema de vacinação básico completo: reforço com dTpa a cada dez anos. Com esquema de vacinação básico incompleto: uma dose de dTpa a qualquer momento e completar a vacinação básica com uma ou duas doses de dT (dupla bacteriana do tipo adulto) de forma a totalizar três doses de vacina contendo o componente tetânico. Não vacinados e/ou histórico vacinal desconhecido: uma dose de dTpa e duas doses de dT no esquema 0-2-4 a 8 meses.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": [
+                "Reforço com dtpa a cada dez anos."
+            ]
+        }
+    },
+    {
+        "vacina": "Hepatite B",
+        "categoria": "idoso",
+        "texto_original": "Três doses, no esquema 0-1-6 meses.",
+        "esquema_parseado": {
+            "total_doses": 3,
+            "dose_unica": false,
+            "intervalo_entre_doses": [
+                {
+                    "de_dose": 1,
+                    "para_dose": 2,
+                    "intervalo_dias": 30,
+                    "intervalo_texto": "1 mes"
+                },
+                {
+                    "de_dose": 2,
+                    "para_dose": 3,
+                    "intervalo_dias": 150,
+                    "intervalo_texto": "5 mes"
+                }
+            ],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Febre amarela",
+        "categoria": "idoso",
+        "texto_original": "• Recomendação PNI: Se aplicada a partir dos 5 anos de idade: dose única. A partir dos 60 anos, o serviço de saúde deverá avaliar a indicação, considerando o risco da doença e o risco de eventos adversos nessa faixa etária e/ou decorrentes de comorbidades. • Recomendação SBIm: Duas doses. Como há possibilidade de falha vacinal, está recomendada uma segunda dose com intervalo de 10 anos.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Vírus Sincicial Respiratório",
+        "categoria": "idoso",
+        "texto_original": "A partir dos 60 anos recomen- dada para pessoas com maior risco de evolução grave ou descompensação da doença de base pela infecção pelo VSR (ver Comentários). Indicada como rotina a partir dos 70 anos, independente de fatores de risco.",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Covid-19",
+        "categoria": "idoso",
+        "texto_original": "Uma dose de seis em seis meses.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Hepatite A",
+        "categoria": "idoso",
+        "texto_original": "Duas doses, no esquema 0-6 meses.",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [
+                {
+                    "de_dose": 1,
+                    "para_dose": 2,
+                    "intervalo_dias": 180,
+                    "intervalo_texto": "6 mes"
+                }
+            ],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Hepatites A e B",
+        "categoria": "idoso",
+        "texto_original": "Três doses, no esquema 0-1-6 meses.",
+        "esquema_parseado": {
+            "total_doses": 3,
+            "dose_unica": false,
+            "intervalo_entre_doses": [
+                {
+                    "de_dose": 1,
+                    "para_dose": 2,
+                    "intervalo_dias": 30,
+                    "intervalo_texto": "1 mes"
+                },
+                {
+                    "de_dose": 2,
+                    "para_dose": 3,
+                    "intervalo_dias": 150,
+                    "intervalo_texto": "5 mes"
+                }
+            ],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Meningocócicas conjugadas ACWY ou C",
+        "categoria": "idoso",
+        "texto_original": "Uma dose. A indicação da vacina, assim como a necessidade de reforços, dependerão da situação epidemiológica.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": [
+                "Reforços, dependerão da situação epidemiológica."
+            ]
+        }
+    },
+    {
+        "vacina": "Tríplice viral (sarampo, caxumba e rubéola)",
+        "categoria": "idoso",
+        "texto_original": "Uma dose. A indicação da vacina dependerá de risco epidemiológico e da situação individual de suscetibilidade.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Imunobiológicos recomendados no primeiro ano de vida",
+        "categoria": "prematuro",
+        "texto_original": "Esquemas e recomendações",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Gratuitas nas UBS* e/ou nos CRIE**",
+        "categoria": "prematuro",
+        "texto_original": "Serviços privados de Vacinação",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "BCG ID",
+        "categoria": "prematuro",
+        "texto_original": "Dose única. Se PN** < 2.000 g, adiar a vacinação até que o RN*** atinja peso maior ou igual a 2.000 g.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Hepatite B",
+        "categoria": "prematuro",
+        "texto_original": "Primeira dose nas primeiras 12 horas de vida. Continuidade: obrigatoriamente quatro doses (esquema 0-2-4- 6 meses) em RNs nascidos com peso inferior a 2.000 g ou idade gestacional menor que 33 semanas",
+        "esquema_parseado": {
+            "total_doses": 4,
+            "dose_unica": false,
+            "intervalo_entre_doses": [
+                {
+                    "de_dose": 1,
+                    "para_dose": 2,
+                    "intervalo_dias": 60,
+                    "intervalo_texto": "2 mes"
+                },
+                {
+                    "de_dose": 2,
+                    "para_dose": 3,
+                    "intervalo_dias": 60,
+                    "intervalo_texto": "2 mes"
+                },
+                {
+                    "de_dose": 3,
+                    "para_dose": 4,
+                    "intervalo_dias": 60,
+                    "intervalo_texto": "2 mes"
+                }
+            ],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Rotavírus",
+        "categoria": "prematuro",
+        "texto_original": "• Vacinar na idade cronológica, iniciando aos 2 meses de vida. Vacina monovalente RV1: duas doses aos 2 e 4 meses de idade. Vacina pentavalente RV5: três doses aos 2, 4 e 6 meses de idade. Em caso de recuperação de esquemas de atraso vacinal, a D1 aplicar no máximo até 11 meses e 29 dias, e a última dose até 23 meses e 29 dias (uso off label). Intervalo mínimo entre doses de 30 dias. • Vacina de vírus vivo atenuado, oral, e portanto contraindicada em ambiente hospitalar.",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Tríplice bacteriana (difteria, tétano, coqueluche)",
+        "categoria": "prematuro",
+        "texto_original": "• Vacinar na idade cronológica, iniciando aos 2 meses de vida, de acordo com o Calendário de vacinação SBIm criança. • Para RNs prematuros, hospitalizados ou não, utilizar preferencialmente vacinas acelulares, porque reduzem o risco de eventos adversos.",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Haemophilus influenzae b",
+        "categoria": "prematuro",
+        "texto_original": "• Vacinar na idade cronológica, iniciando aos 2 meses de vida, de acordo com o Calendário de vacinação SBIm criança. • Reforço aos 15 meses de vida.",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Poliomielite inativada (VIP)",
+        "categoria": "prematuro",
+        "texto_original": "Vacinar na idade cronológica, iniciando aos 2 meses de vida, de acordo com o Calendário de vacinação SBIm criança.",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Pneumocócicas conjugadas",
+        "categoria": "prematuro",
+        "texto_original": "Vacinar na idade cronológica, iniciando aos 2 meses de vida, de acordo com o Calendário de vacinação SBIm criança.",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Meningocócicas conjugadas ACWY ou C",
+        "categoria": "prematuro",
+        "texto_original": "Vacinar na idade cronológica, iniciando aos 3 meses de vida, de acordo com o Calendário de vacinação SBIm criança.",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Meningocócicas B",
+        "categoria": "prematuro",
+        "texto_original": "Vacinar na idade cronológica, iniciando aos 3 meses de vida, de acordo com o Calendário de vacinação SBIm criança.",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Influenza",
+        "categoria": "prematuro",
+        "texto_original": "Vacinar na idade cronológica, iniciando a partir dos 6 meses de vida, de acordo com a sazonalidade do vírus e com o Calendário de vacinação SBIm criança.",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Febre amarela",
+        "categoria": "prematuro",
+        "texto_original": "Vacinar na idade cronológica, aos 9 meses e aos 4 anos de idade (consulte o Calendário de vacinação SBIm criança).",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Covid-19",
+        "categoria": "prematuro",
+        "texto_original": "Rotina para crianças de 6 meses até menores de 5 anos de idade. Esquema de doses dependendo da",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Imunoglobulinas recomendadas no primeiro ano de vida",
+        "categoria": "prematuro",
+        "texto_original": "Esquemas e recomendações",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Gratuita nas UBS* e/ou nos CRIE**",
+        "categoria": "prematuro",
+        "texto_original": "Serviços privados de vacinação",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Imunoglobulina humana anti-hepatite B (IGHAHB)",
+        "categoria": "prematuro",
+        "texto_original": "Para RNs de mães portadoras do vírus da hepatite B: 0,5 mL via intramuscular.",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Imunoglobulina humana antivaricela zóster (IGHAVZ)",
+        "categoria": "prematuro",
+        "texto_original": "Está recomendada nas seguintes situações: • Para prematuros nascidos entre 28 semanas e 36 semanas de gestação expostos à varicela, quando a mãe tiver história negativa para varicela. • Para prematuros nascidos com menos de 28 semanas de gestação ou com menos de 1.000 g de peso e expostos à varicela, independente da história materna de varicela. • A dose é de 125 UI por via IM e deve ser aplicada em até 96 horas após o contato.",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Imunoglobulina humana antitetânica (IGHAT)",
+        "categoria": "prematuro",
+        "texto_original": "Está recomendada na dose de 250 UI, por via IM. Para RNs prematuros com lesões potencialmente tetanogênicas, independentemente da história vacinal da mãe.",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "VACINAS",
+        "categoria": "crianca",
+        "texto_original": "DO NASCIMENTO AOS 2 ANOS DE IDADE",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Ao nascer",
+        "categoria": "crianca",
+        "texto_original": "1 mês",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "BCG ID(1)",
+        "categoria": "crianca",
+        "texto_original": "Dose única",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Hepatite B (2)",
+        "categoria": "crianca",
+        "texto_original": "Três ou quatro doses, dependendo da vacina utilizada",
+        "esquema_parseado": {
+            "total_doses": 4,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Rotavírus (3)",
+        "categoria": "crianca",
+        "texto_original": "Duas ou três doses, dependendo da vacina utilizada",
+        "esquema_parseado": {
+            "total_doses": 3,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Tríplice bacteriana (DTPw ou DTPa) (4)",
+        "categoria": "crianca",
+        "texto_original": "1ª dose",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Haemophilus influenzae b (5)",
+        "categoria": "crianca",
+        "texto_original": "1ª dose",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Poliomielite (vírus inativados) (6)",
+        "categoria": "crianca",
+        "texto_original": "1ª dose",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Pneumocócicas conjugadas (7)",
+        "categoria": "crianca",
+        "texto_original": "Duas ou três doses, dependendo da vacina utilizada",
+        "esquema_parseado": {
+            "total_doses": 3,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Meningocócicas conjugadas ACWY ou C (8)",
+        "categoria": "crianca",
+        "texto_original": "1ª dose",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Meningocócica B (9)",
+        "categoria": "crianca",
+        "texto_original": "1ª dose",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Influenza (gripe) (10)",
+        "categoria": "crianca",
+        "texto_original": "DE 9 ANOS: DUAS DOSES COM INTERVALO DE UM MÊS. APÓS, DOSE ÚNICA ANUAL.",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Febre amarela (11)",
+        "categoria": "crianca",
+        "texto_original": "1ª dose",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Hepatite A (12)",
+        "categoria": "crianca",
+        "texto_original": "1a dose",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Tríplice viral (sarampo, caxumba e rubéola) (13,15)",
+        "categoria": "crianca",
+        "texto_original": "1ª dose",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Varicela (catapora) (14,15)",
+        "categoria": "crianca",
+        "texto_original": "1ª dose",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "HPV (16)",
+        "categoria": "crianca",
+        "texto_original": "Duas doses",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Vacina tríplice bacteriana acelular do tipo adulto (dTpa) (4)",
+        "categoria": "crianca",
+        "texto_original": "",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Dengue (17)",
+        "categoria": "crianca",
+        "texto_original": "Qdenga®, em duas doses, independente de contato prévio com o vírus da dengue.",
+        "esquema_parseado": {
+            "total_doses": 2,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Covid-19 (18)",
+        "categoria": "crianca",
+        "texto_original": "Rotina para crianças de 6 meses até menores de 5 anos de idade. Esquema de doses dependendo da vacina utilizada. Ver https://www.gov.br/saude/pt-br/assuntos/covid-19",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Nirsevimabe (19)",
+        "categoria": "crianca",
+        "texto_original": "Recomendado para crianças <12 meses de idade, em dose única. Dos 12 aos < 24 meses de idade, para crianças com maior risco (ver Comentário 19).",
+        "esquema_parseado": {
+            "total_doses": 1,
+            "dose_unica": true,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Vacinas combinadas pertussis",
+        "categoria": "crianca",
+        "texto_original": "Composição vacinal",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Difteria",
+        "categoria": "crianca",
+        "texto_original": "Tétano",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Tríplice bacteriana infantil de células inteiras (DTPw)",
+        "categoria": "crianca",
+        "texto_original": "x",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Pentavalente de células inteiras (DTPw-HB-Hib)",
+        "categoria": "crianca",
+        "texto_original": "x",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Pentavalente acelular (DTPa-VIP-Hib)",
+        "categoria": "crianca",
+        "texto_original": "x",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Hexavalente acelular (DTPa-HB-VIP-Hib)",
+        "categoria": "crianca",
+        "texto_original": "x",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Tetravalente pediátrica acelular (DTPa-VIP)",
+        "categoria": "crianca",
+        "texto_original": "x",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Tríplice bacteriana adulto acelular (dTpa)",
+        "categoria": "crianca",
+        "texto_original": "x",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    },
+    {
+        "vacina": "Tetravalente adulto acelular (dTpa-VIP)",
+        "categoria": "crianca",
+        "texto_original": "x",
+        "esquema_parseado": {
+            "total_doses": null,
+            "dose_unica": false,
+            "intervalo_entre_doses": [],
+            "reforcos": []
+        }
+    }
+]
