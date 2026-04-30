@@ -1,3 +1,9 @@
+# API 1° Semestre ADS
+
+# PI Nexus
+
+
+
 ## Objetivo do Projeto
 O objetivo do projeto é desenvolver um assistente virtual que use dados de portais públicos de saúde sobre vacinação, visando:
 - Informar o usuário sobre vacinas e seus calendários com base na faixa etária/grupo (crianças, adolescentes, adultos, idosos e gestantes);
@@ -44,17 +50,42 @@ O foco do projeto é o algoritmo, sem o uso de persistência de dados (Banco de 
 | 2    | Alta       | Como parente de um paciente, gostaria de consultar as datas de vacinação para meu filho de 2 anos, para levá-lo na data correta e mantê-lo protegido contra doenças virais.                                                              | 5          | 1      |                                                                                                                                                                                                                                                                                                                            | ...        | ...    |
 | 3   | Média      | Como usuário do assistente virtual, gostaria de receber notificações perto da data da próxima vacina para não me esquecer.     | 8          | 2      |
 | 4   | Média      | Como jornalista, gostaria de acessar os dados de cobertura vacinal da minha região para escrever uma matéria.     | 13          | 2      |
-| 5   | Média      | Como cidadão, gostaria de poder utilizar comandos de voz para fazer buscas no assistente virtual     | 8          | 3      |
-| 6   | Baixa      | Como adulto, gostaria de ver as possíveis dúvidas mais perguntadas sobre vacinações     | 3          | 3      |
-| 7   | Baixa      | Como usuário do assistente, gostaria de consultar os postos de saúde próximos de mim     | 5          | 3      |
+| 5   | Média      | Como usuário do assistente, gostaria de consultar os postos de saúde próximos de mim     | 5          | 2      |
+| 6   | Média      | Como cidadão, gostaria de poder utilizar comandos de voz para fazer buscas no assistente virtual     | 8          | 3      |
+| 7   | Baixa      | Como adulto, gostaria de ver as possíveis dúvidas mais perguntadas sobre vacinações     | 3          | 3      |
+---
+## ⚡ DoR - Definition of Ready <a id="dor"></a>
+
+- User Stories com **Critérios de Aceitação** definidos
+- Subtarefas divididas **a partir das US** no Jira
+- **Diagrama de Rotas** do bot (comandos e fluxos de conversa) mapeado
+- Fontes públicas de dados de vacinação **identificadas e acessíveis** via scraping (BeautifulSoup/Requests)
+- Comandos do **bot do Telegram** definidos e validados via **pyTelegramBotAPI**
+- Ambiente de desenvolvimento configurado com **Dotenv** e dependências do **requirements.txt** documentadas
+- Repositório no **GitHub** com branch da US criada e rastreável ao card do **Jira**
+
+---
+
+## 🏆 DoD - Definition of Done <a id="dod"></a>
+
+- Código completo, limpo e **revisado** no GitHub
+- Funcionalidade **testada e funcionando** no bot do Telegram (respostas corretas ao usuário)
+- Scraping funcionando corretamente com **BeautifulSoup + Selenium** sem erros não tratados
+- Rotas do servidor **Flask** respondendo conforme esperado
+- Variáveis sensíveis (token do bot, URLs) protegidas via **Dotenv**
+- **Manual de Usuário** descrevendo como interagir com o bot e seus comandos
+- **Manual da Aplicação** com instruções de instalação, configuração e execução local
+- Card da US **fechado e atualizado no Jira**
+- Vídeo da etapa de entrega **gravado e disponibilizado**
+
 ---
 
 # Registro das Sprints
 
 | Sprint             | Previsão   | Status   | Histórico |
 |-------------------|------------|----------|-----------|
-| 01                | 05/04/2026 | a fazer  | [MVP](MVP/sp1.md)  |
-| 02                | 03/05/2026 | a fazer  | [a fazer]  |
+| 01                | 05/04/2026 | feito | [MVP](MVP/sp1.md)  |
+| 02                | 03/05/2026 | feito  | [MVP](MVP/sp2.md)  |
 | 03                | 31/05/2026 | a fazer  | [a fazer] |
 | Feira de Soluções | 11/06/2026 | a fazer  | [a fazer] |
 
