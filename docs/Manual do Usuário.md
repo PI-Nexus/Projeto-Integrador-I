@@ -29,7 +29,7 @@ A base de dados é obtida via scraping de `https://www.gov.br/saude/pt-br/vacina
 2. Busque por `@Gotinha_bot` ou escaneie o QrCode abaixo.
 
 <p align="center">
-  <img src="assets/img/qr-code-telegram.png" alt="QR Code do bot" width="220" />
+  <img src="../assets/img/qr-code-telegram.png" alt="QR Code do bot" width="220" />
 </p>
 
 3. Digite `/start` ou `/help`.
