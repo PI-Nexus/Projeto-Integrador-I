@@ -1,7 +1,9 @@
 import os
 from bs4 import BeautifulSoup
 import requests
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def save_as_file():
     """
@@ -12,7 +14,7 @@ def save_as_file():
       em 'data/scrap.txt'.
     """
     os.makedirs('data',exist_ok=True)
-    url = 'https://www.gov.br/saude/pt-br/vacinacao/calendario'
+    url = os.getenv('URL_VACINAS')
     response = requests.get(url, timeout=10)
     with open('data/scrap.txt','w',encoding='utf-8') as my_file:
         my_file.write(str(response.text))

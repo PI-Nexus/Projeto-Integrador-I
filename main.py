@@ -2,6 +2,7 @@
 import os
 import threading
 from datetime import datetime
+import re
 
 # Bibliotecas externas
 import telebot
@@ -96,15 +97,19 @@ def escolher_regiao(msg):
 @bot.message_handler(func=lambda msg: msg.text == "Realizar nova consulta")
 def nova_consulta(msg):
     menu_cobertura(msg)
-    
+
 #Dashboard
 @bot.message_handler(func=lambda msg: msg.text == "Dashboard")
 def dashboard(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Voltar ao Menu Principal')
-    link = "https://app.powerbi.com/view?r=eyJrIjoiMjFmM2ViMWQtZGI0OS00NjJkLTkxYmQtMGI5MmYzYjliOWUzIiwidCI6ImNmNzJlMmJkLTdhMmItNDc4My1iZGViLTM5ZDU3YjA3Zjc2ZiIsImMiOjR9"
-    bot.send_message(msg.chat.id, f"<a href = '{link}'> Dashboard Cobertura Vacinal </a>", reply_markup=markup, parse_mode="HTML")
-
+    markup.add('Voltar ao Menu Principal','Encerrar')
+    link = os.getenv('LINK_POWERBI')
+    bot.send_message(
+        msg.chat.id,
+        f"📊 <b>Dashboard de Cobertura Vacinal</b> — <a href='{link}'>Acessar</a>",
+        reply_markup=markup,
+        parse_mode="HTML"
+    )
 # OPÇÃO 1 — POR ESTADO (fluxo original, apenas entry-point novo)
 @bot.message_handler(func=lambda msg: msg.text == "Estado")
 def cobertura_por_estado(msg):
@@ -232,7 +237,6 @@ def processar_estado(msg):
 # FLUXO DE LOCALIZAÇÃO
 @bot.message_handler(func=lambda msg: msg.text == "Unidades próximas")
 def pedir_localizacao(msg):
-    start_drivers()
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     btn_gps = types.KeyboardButton("📍 Compartilhar minha localização atual", request_location=True)
     markup.add(btn_gps, "Voltar ao Menu Principal")
@@ -244,11 +248,15 @@ def pedir_localizacao(msg):
 
 @bot.message_handler(content_types=['location'])
 def tratar_localizacao(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add( "Voltar ao Menu Principal","Encerrar")
 
-    bot.send_message(msg.chat.id,"🔎 Buscando UBS próximas… aguarde um instante.",parse_mode="Markdown")
+
+    bot.send_message(msg.chat.id,"🔎 Buscando UBS próximas… aguarde um instante.",parse_mode="Markdown",reply_markup=markup)
     try:
         lat = msg.location.latitude
         lon = msg.location.longitude
+        start_drivers()
         postos_proximos = buscar_postos_proximos(lat, lon)
         links= threading_search(postos_proximos)
 
@@ -256,14 +264,13 @@ def tratar_localizacao(msg):
         message = ''
         for posto in postos_proximos:
             link=links[posto['nome']]
-            message += f'\n<a href="{link}">{posto["nome"]}</a>\n'
-
+            message += f"• <a href='{link}'>📍 {posto['nome']}</a>\n"
         bot.send_message(msg.chat.id, message, parse_mode="HTML")
 
 
     except Exception as e:
         print(f"Erro GPS: {e}")
-        bot.send_message(msg.chat.id, "⚠️ Erro ao consultar o portal de saúde.")
+        bot.send_message(msg.chat.id, "⚠️ Erro ao consultar o portal de saúde.",parse_mode='Markdown')
 
 # FLUXO DE VACINAS
 @bot.message_handler(func=lambda msg: msg.text == "Vacinas")
@@ -284,7 +291,7 @@ def processar_dados(msg):
         idade_anos = hoje.year - data_nascimento.year - ((hoje.month, hoje.day) < (data_nascimento.month, data_nascimento.day))
 
         id_site = definir_categoria_por_idade(idade_anos)
-        dados_vacinas = scrap(id_site) 
+        dados_vacinas = scrap(id_site)
 
         if not dados_vacinas:
             bot.send_message(msg.chat.id, f"✅ Não encontrei vacinas pendentes para sua faixa ({id_site}).")
@@ -295,7 +302,7 @@ def processar_dados(msg):
         if idade_anos < 12:
             idade_meses_total = (idade_anos * 12) + (hoje.month - data_nascimento.month)
             vacinas_exibicao = [
-                v for v in dados_vacinas 
+                v for v in dados_vacinas
                 if converter_periodo_para_meses(v['periodo']) >= idade_meses_total
             ]
         else:
@@ -304,11 +311,11 @@ def processar_dados(msg):
         user_states[msg.chat.id] = {
             'data_nasc': data_nascimento,
             'vacinas': vacinas_exibicao,
-            'indice_atual': 0
+            'selecionadas': []
         }
 
         # Chamada dos botões
-        exibir_vacina_atual(msg.chat.id, 0)
+        mostrar_vacinas_checklist(msg.chat.id)
 
     except Exception as e:
         bot.reply_to(msg, "⚠️ Erro ao processar. Certifique-se de usar DD/MM/AAAA.")
@@ -327,66 +334,132 @@ def enviar_grupos(msg):
         user_states[msg.chat.id] = {
             'data_nasc': datetime.now(),
             'vacinas': dados_vacinais,
-            'indice_atual': 0
+            'selecionadas': []
         }
-        exibir_vacina_atual(msg.chat.id, 0)
+        mostrar_vacinas_checklist(msg.chat.id)
     except Exception:
         bot.reply_to(msg, 'Não encontramos dados.')
-
-def exibir_vacina_atual(chat_id, indice):
+def mostrar_vacinas_checklist(chat_id):
     dados = user_states.get(chat_id)
+
     if not dados or not dados['vacinas']:
-        bot.send_message(chat_id, "Nenhuma vacina pendente encontrada.")
+        bot.send_message(chat_id, "Nenhuma vacina encontrada.")
         return
 
     vacinas = dados['vacinas']
-    
-    if indice >= len(vacinas):
-        bot.send_message(chat_id, "✅ Você já visualizou todas as opções disponíveis!")
-        servico_final_manual(chat_id)
-        return
-
-    user_states[chat_id]['indice_atual'] = indice
-    v = vacinas[indice]
+    selecionadas = dados.setdefault('selecionadas', [])
 
     markup = types.InlineKeyboardMarkup(row_width=1)
-    btn_agendar = types.InlineKeyboardButton("🔔 Agendar esta", callback_data="agendar_esta")
-    btn_proxima = types.InlineKeyboardButton("⏭️ Já tomei / Próxima", callback_data="proxima_vacina")
-    markup.add(btn_agendar, btn_proxima)
 
-    texto = (f"📍 *Opção {indice + 1} de {len(vacinas)}*\n\n"
-             f"💉 *Vacina:* {v['vacina']}\n"
-             f"📅 *Recomendação:* {v['periodo']}\n\n"
-             "Deseja agendar um lembrete ou ver a próxima?")
-    
-    bot.send_message(chat_id, texto, parse_mode="Markdown", reply_markup=markup)
+    for i, v in enumerate(vacinas):
+        nome = v['vacina']
+
+        if i in selecionadas:
+            texto = f"✅ {nome}"
+        else:
+            texto = f"⬜ {nome}"
+
+        markup.add(types.InlineKeyboardButton(
+            texto,
+            callback_data=f"toggle_{i}"
+        ))
+
+    markup.add(types.InlineKeyboardButton(
+        "📅 Agendar selecionadas",
+        callback_data="confirmar"
+    ))
+    markup.add(types.InlineKeyboardButton(
+        "Finalizar",
+        callback_data="finalizar"
+    ))
+
+    bot.send_message(chat_id, "Selecione abaixo as vacinas que você ainda não tomou 👇", reply_markup=markup)
+
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     chat_id = call.message.chat.id
-    
-    if call.data == "proxima_vacina":
-        novo_indice = user_states[chat_id].get('indice_atual', 0) + 1
-        bot.delete_message(chat_id, call.message.message_id)
-        exibir_vacina_atual(chat_id, novo_indice)
+    dados = user_states.get(chat_id)
 
-    elif call.data == "agendar_esta":
-        indice = user_states[chat_id]['indice_atual']
-        vacina = user_states[chat_id]['vacinas'][indice]
-        
-        bot.answer_callback_query(call.id, "Iniciando agendamento...")
-        bot.send_message(chat_id, f"💉 Selecionada: *{vacina['vacina']}*\n\nInforme seu e-mail para receber os alertas:", parse_mode="Markdown")
-        bot.register_next_step_handler(call.message, finalizar_agendamento, vacina['vacina'], vacina['periodo'])
+    if not dados:
+        return
 
-def finalizar_agendamento(msg, vacina_nome, periodo):
+    vacinas = dados['vacinas']
+    selecionadas = dados.setdefault('selecionadas', [])
+
+    # 🔁 TOGGLE
+    if call.data.startswith("toggle_"):
+        indice = int(call.data.split("_")[1])
+
+        if indice in selecionadas:
+            selecionadas.remove(indice)
+        else:
+            selecionadas.append(indice)
+
+        markup = types.InlineKeyboardMarkup(row_width=1)
+
+        for i, v in enumerate(vacinas):
+            nome = v['vacina']
+            texto = f"✅ {nome}" if i in selecionadas else f"⬜ {nome}"
+
+            markup.add(types.InlineKeyboardButton(
+                texto,
+                callback_data=f"toggle_{i}"
+            ))
+
+        markup.add(types.InlineKeyboardButton(
+            "📅 Agendar selecionadas",
+            callback_data="confirmar"
+        ))
+        markup.add(types.InlineKeyboardButton(
+            "Finalizar",
+            callback_data="finalizar"
+        ))
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=call.message.message_id,
+            reply_markup=markup
+        )
+
+
+    # 📅 CONFIRMAR
+    elif call.data == "confirmar" or call.data == "finalizar" :
+        if not selecionadas:
+            bot.answer_callback_query(call.id, "Nenhuma vacina selecionada.")
+            return
+
+        lista = [vacinas[i] for i in selecionadas]
+
+        texto = "📋 Vacinas pendentes:\n\n"
+        for v in lista:
+            texto += f"• {v['vacina']} ({v['periodo']})\n"
+
+        bot.send_message(chat_id, texto)
+        if call.data == "confirmar" :
+            bot.send_message(chat_id, "Digite seu e-mail:")
+            bot.register_next_step_handler(call.message, finalizar_agendamento_lista, lista)
+        if call.data=="finalizar" :
+            servico_final_manual(chat_id)
+
+def finalizar_agendamento_lista(msg, lista_vacinas):
     chat_id = msg.chat.id
-    # Proteção caso o estado tenha sido perdido
+    email = msg.text.strip()
+
+    regex_pattern = r'^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
+
+    if not re.fullmatch(regex_pattern, email, re.IGNORECASE):
+        bot.send_message(chat_id, "❌ E-mail inválido. Digite novamente:")
+        bot.register_next_step_handler(msg, finalizar_agendamento_lista, lista_vacinas)
+        return
+
     data_nasc = user_states.get(chat_id, {}).get('data_nasc', datetime.now())
-    
-    data_alvo = notify.calcular_data_alvo(data_nasc, periodo)
-    notify.salvar_agendamento(chat_id, msg.text, vacina_nome, data_alvo)
-    
-    bot.send_message(chat_id, f"✅ Agendado com sucesso para {data_alvo.strftime('%d/%m/%Y')}!")
+
+    for v in lista_vacinas:
+        data_alvo = notify.calcular_data_alvo(data_nasc, v['periodo'])
+        notify.salvar_agendamento(chat_id, email, v['vacina'], data_alvo)
+
+    bot.send_message(chat_id, "✅ Vacinas agendadas com sucesso!")
     servico_final(msg)
 
 def servico_final_manual(chat_id):
@@ -399,7 +472,7 @@ def servico_final_manual(chat_id):
 @bot.message_handler(func=lambda msg: msg.text == "FAQ")
 def faq_menu(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Documentos necessários', 'Reações comuns', 'Voltar ao Menu Principal')
+    markup.add('Documentos Necessários', 'Reações Comuns', 'Voltar ao Menu Principal')
     bot.send_message(msg.chat.id, "📌 *Dúvidas Frequentes*", reply_markup=markup, parse_mode="Markdown")
 
 @bot.message_handler(func=lambda msg: msg.text == "Documentos Necessários")
@@ -430,8 +503,23 @@ def finalizar_servico(msg):
 
 def servico_final(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Notificar Próxima Vacina','Encerrar', 'Continuar')
+    markup.add('Encerrar', 'Continuar')
     bot.send_message(msg.chat.id, 'Deseja realizar outra consulta?', reply_markup=markup)
+
+@bot.message_handler(func=lambda msg: msg.text == "Documentos Necessários")
+def faq_documents(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add('Voltar ao Menu Principal')
+    bot.send_message(msg.chat.id, "Documento com Foto e Caderneta de Vacinação",
+    reply_markup=markup, parse_mode="Markdown")
+
+@bot.message_handler(func=lambda msg: msg.text == "Reações Comuns")
+def faq_reactions(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add('Voltar ao Menu Principal')
+    bot.send_message(msg.chat.id, """Febre Leve e Cansaço\n
+    Duração de 1 até 3 dias""", reply_markup=markup, parse_mode="Markdown")
+
 # EXECUÇÃO
 
 if __name__ == "__main__":
@@ -443,7 +531,9 @@ if __name__ == "__main__":
     t.daemon = True
     t.start()
 
-    t_notifica = threading.Thread(target=notify.loop_notificacao, args=(bot,), daemon=True).start()
+    t_notifica = threading.Thread(target=notify.loop_notificacao, args=(bot,))
+    t_notifica.daemon = True
+    t_notifica.start()
 
     print("Bot Gotinha Ativado com Localização! 🚀")
     bot.infinity_polling()
