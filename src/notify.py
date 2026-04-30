@@ -3,6 +3,8 @@ import os
 from datetime import datetime, timedelta
 from pathlib import Path
 import time
+import smtplib
+from email.message import EmailMessage
 
 # --- CONFIGURAÇÃO DE CAMINHOS ROBUSTA ---
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -65,6 +67,24 @@ def calcular_data_alvo(data_nasc_ou_hoje, periodo_texto):
 
     return hoje + timedelta(days=30)
 
+def enviar_email(destinatario, vacina, data):
+    """Dispara o e-mail de alerta."""
+    user = os.getenv('EMAIL_USER')
+    password = os.getenv('EMAIL_PASS')
+
+    msg = EmailMessage()
+    msg.set_content(f"Olá! O Assistente Gotinha passando para avisar que sua vacina ({vacina}) está próxima: {data}.")
+    msg['Subject'] = "Lembrete de Vacinação 💉"
+    msg['From'] = user
+    msg['To'] = destinatario
+
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(user, password)
+            server.send_message(msg)
+    except Exception as e:
+        print(f"Erro ao enviar e-mail: {e}")
+
 def loop_notificacao(bot):
     while True:
         try:
@@ -85,6 +105,7 @@ def loop_notificacao(bot):
                     if label not in agend['alertas_enviados']:
                         msg = f"💉 *Lembrete Gotinha*\n\nSua vacina *{agend['vacina']}* está chegando!\n📅 Data: {agend['data_alvo']}"
                         bot.send_message(agend['chat_id'], msg, parse_mode="Markdown")
+                        enviar_email(agend['email'], agend['vacina'],agend['data_alvo'])
                         agend['alertas_enviados'].append(label)
                         alterado = True
 
@@ -93,4 +114,4 @@ def loop_notificacao(bot):
         except Exception as e:
             print(f"Erro no loop: {e}")
         
-        time.sleep(3600)
+        time.sleep(10)

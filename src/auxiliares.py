@@ -1,6 +1,7 @@
 import re 
 from telebot import types
 from dateutil.relativedelta import relativedelta
+from datetime import datetime
 
 
 def plural(palavra_singular, palavra_plural, quantidade):
@@ -72,3 +73,9 @@ def definir_categoria_por_idade(idade_anos):
         return "adulto"
     else:
         return "idoso"
+    
+def validar_data(texto):
+    try:
+        return datetime.strptime(texto, "%d/%m/%Y")
+    except ValueError:
+        return None
