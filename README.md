@@ -79,5 +79,32 @@ O foco do projeto é o algoritmo, sem o uso de persistência de dados (Banco de 
 | 03                | 31/05/2026 | a fazer  | [a fazer] |
 | Feira de Soluções | 11/06/2026 | a fazer  | [a fazer] |
 
+---
+
+## ⚡ DoR - Definition of Ready <a id="dor"></a>
+
+- User Stories com **Critérios de Aceitação** definidos
+- Subtarefas divididas **a partir das US** no Jira
+- **Diagrama de Rotas** do bot (comandos e fluxos de conversa) mapeado
+- Fontes públicas de dados de vacinação **identificadas e acessíveis** via scraping (BeautifulSoup/Requests)
+- Comandos do **bot do Telegram** definidos e validados via **pyTelegramBotAPI**
+- Ambiente de desenvolvimento configurado com **Dotenv** e dependências do **requirements.txt** documentadas
+- Repositório no **GitHub** com branch da US criada e rastreável ao card do **Jira**
+
+---
+
+## 🏆 DoD - Definition of Done <a id="dod"></a>
+
+- Código completo, limpo e **revisado** no GitHub
+- Funcionalidade **testada e funcionando** no bot do Telegram (respostas corretas ao usuário)
+- Scraping funcionando corretamente com **BeautifulSoup + Requests** sem erros não tratados
+- Rotas do servidor **Flask** respondendo conforme esperado
+- Variáveis sensíveis (token do bot, URLs) protegidas via **Dotenv**
+- **Manual de Usuário** descrevendo como interagir com o bot e seus comandos
+- **Manual da Aplicação** com instruções de instalação, configuração e execução local
+- Card da US **fechado e atualizado no Jira**
+- Vídeo da etapa de entrega **gravado e disponibilizado**
+
+---
 
 Manual do Usuário: [Clique aqui para abrir o manual](docs/Manual%20do%20Usuário.md) 
