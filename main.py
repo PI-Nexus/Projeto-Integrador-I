@@ -547,16 +547,16 @@ def servico_final(msg):
 @bot.message_handler(func=lambda msg: msg.text == "Documentos Necessários")
 def faq_documents(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Voltar ao Menu Principal')
+    markup.add('Reações Comuns', 'Voltar ao Menu Principal')
     bot.send_message(msg.chat.id, "Documento com Foto e Caderneta de Vacinação",
     reply_markup=markup, parse_mode="Markdown")
 
 @bot.message_handler(func=lambda msg: msg.text == "Reações Comuns")
 def faq_reactions(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Voltar ao Menu Principal')
-    bot.send_message(msg.chat.id, """Febre Leve e Cansaço\n
-    Duração de 1 até 3 dias""", reply_markup=markup, parse_mode="Markdown")
+    markup.add('Documentos Necessários', 'Voltar ao Menu Principal')
+    bot.send_message(msg.chat.id, "Febre Leve e Cansaço de 3 dias no máximo",
+    reply_markup=markup, parse_mode="Markdown")
 
 # EXECUÇÃO
 
