@@ -140,7 +140,7 @@ Será expandido o bot do Telegram para incluir funcionalidades baseadas em **tem
 ---
 
 ## 📂 Anexos / Evidências
-- Prints das interações no Telegram
-- Exemplos de notificações enviadas
-- Resultados de consultas por região
-- Demonstração da busca por postos próximos
+
+**Vídeo de Demonstração:**\
+Confira o bot em funcionamento:
+https://youtube.com/shorts/8s13m9P-C_w?feature=shared
