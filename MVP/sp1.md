@@ -116,4 +116,4 @@ Será desenvolvido um bot no Telegram capaz de consultar uma base de dados gerad
 
 **Vídeo de Demonstração:**\
 Confira o bot em funcionamento:
-https://youtube.com/shorts/9Sdsh29rDXo?si=FZLqHO0BJC0KCYis
+https://www.youtube.com/shorts/rFzl3NAZRNI
