@@ -10,6 +10,8 @@ from telebot import types
 from telebot.types import ReplyKeyboardRemove
 from dotenv import load_dotenv
 from flask import Flask
+import ollama
+
 
 # Módulos internos
 from src.scrap import formatar_mensagem_bot, scrap
@@ -98,7 +100,6 @@ def escolher_regiao(msg):
 def nova_consulta(msg):
     menu_cobertura(msg)
 
-#Dashboard
 @bot.message_handler(func=lambda msg: msg.text == "Dashboard")
 def dashboard(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
@@ -110,6 +111,7 @@ def dashboard(msg):
         reply_markup=markup,
         parse_mode="HTML"
     )
+
 # OPÇÃO 1 — POR ESTADO (fluxo original, apenas entry-point novo)
 @bot.message_handler(func=lambda msg: msg.text == "Estado")
 def cobertura_por_estado(msg):
@@ -558,8 +560,178 @@ def faq_reactions(msg):
     bot.send_message(msg.chat.id, "Febre Leve e Cansaço de 3 dias no máximo",
     reply_markup=markup, parse_mode="Markdown")
 
-# EXECUÇÃO
 
+# LLM
+
+
+tools = [
+
+    {"type": "function",
+"function": {
+    "name": "servicos",
+    "description": (
+        "Fornece servicos disponiveis com botoes : 'Início','Vacinas','Cobertura Vacinal','Unidades próximas','FAQ' "
+        "Para ver barra de servicos em botoes , semelhante ao menu "
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {}
+            }
+        }
+    },
+{"type": "function",
+"function": {
+    "name": "comandos",
+    "description": (
+        "É o primeiro serviço a enviar quando alguém entra, então cumprimentos e mensagens sem sentido podem retornar a função "
+        "Primeira interação do usuário ou o reinicio das atiividades"
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {}
+            }
+        }
+    }
+    ,
+    {
+        "type": "function",
+        "function": {
+            "name": "pedir_localizacao",
+            "description": (
+                "Solicita a localização do usuário para gerar unidades de saúde próoxima onde ele possa se vacinar "
+                "para encontrar UBS ou vacinas próximas"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {}
+            }
+        }
+    },
+{
+        "type": "function",
+        "function": {
+            "name": "escolher_regiao",
+            "description": (
+                "fornece regiões para verificar a cobertura vacinal"
+                "para ver cobertura vacinal da  regiao"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {}
+            }
+        }
+    },
+
+{
+        "type": "function",
+        "function": {
+            "name": "dashboard",
+            "description": (
+                "fornecer dashboard com dados de cobertura vacinal"
+                "para ver um dashboard interativo das coberturas vacinais "
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {}
+            }
+        }
+    },
+{
+    "type": "function",
+    "function": {
+        "name": "processar_dados",
+        "description": (
+            "Use esta função quando o usuário informar ou quiser informar "
+            "sua data de nascimento para consultar vacinas recomendadas, "
+            "vacinas pendentes, calendário vacinal ou verificar sua situação vacinal. "
+            "A data deve estar no formato DD/MM/AAAA."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "data_nascimento": {
+                    "type": "string",
+                    "description": (
+                        "Data de nascimento do usuário no formato DD/MM/AAAA. "
+                        "Exemplo: 25/12/2010"
+                    )
+                }
+            },
+            "required": ["data_nascimento"]
+        }
+    }
+}
+
+]
+@bot.message_handler(func=lambda m: True)
+def linguagem_natural(message):
+    response = ollama.chat(
+        model="llama3.2:latest",
+        messages=[
+            {
+                "role": "user",
+                "content": message.text
+            }
+        ],
+        tools=tools
+    )
+
+    msg = response["message"]
+
+    if msg.get("tool_calls"):
+        for tool in msg["tool_calls"]:
+            function_name = tool["function"]["name"]
+
+            if function_name == "pedir_localizacao":
+                pedir_localizacao(message)
+                return
+
+            elif function_name == "servicos":
+                servicos(message)
+                return
+
+            elif function_name == "escolher_regiao":
+                escolher_regiao(message)
+                return
+
+            elif function_name == "dashboard":
+                dashboard(message)
+                return
+
+            elif function_name == "processar_dados":
+                argumentos = tool["function"]["arguments"]
+                data_nascimento = argumentos.get(
+                    "data_nascimento"
+                )
+
+                # simulando uma mensagem do usuário
+                class FakeMessage:
+                    def __init__(self, text, chat_id):
+                        self.text = text
+                        class Chat:
+                            def __init__(self, chat_id):
+                                self.id = chat_id
+                        self.chat = Chat(chat_id)
+
+                fake_msg = FakeMessage(
+                    text=data_nascimento,
+                    chat_id=message.chat.id
+                )
+
+                processar_dados(fake_msg)
+                return
+            elif function_name=="comandos":
+                comandos(
+                    message
+                )
+
+    if msg.get("content"):
+        bot.reply_to(
+            message,
+            msg["content"]
+        )
+
+# EXECUÇÃO
 if __name__ == "__main__":
     bot.remove_webhook()
 
