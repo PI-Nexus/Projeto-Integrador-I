@@ -22,6 +22,8 @@ from src.scrap_cobertura import (
 from src.buscar_postos import buscar_postos_proximos,threading_search,start_drivers
 import src.notify as notify
 from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo, definir_categoria_por_idade, converter_periodo_para_meses, validar_data
+import src.ollama as ol
+from ollama import chat
 
 
 # 1. Configurações Iniciais
@@ -560,18 +562,71 @@ def faq_reactions(msg):
 
 # EXECUÇÃO
 
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "servicos",
+            "description": (
+                "Fornece servicos disponiveis com botoes : 'Início','Vacinas','Cobertura Vacinal','Unidades próximas','FAQ' "
+                "Para ver barra de servicos em botoes , semelhante ao menu "
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {}
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "pedir_localizacao",
+            "description": (
+                "Solicita a localização do usuário "
+                "para encontrar UBS ou vacinas próximas"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {}
+            }
+        }
+    }
+]
+
+@bot.message_handler(func=lambda m: True)
+def conversar(message):
+    try:
+        # Envia a mensagem diretamente para o modelo que você baixou
+        response = chat(
+            model="llama3.2:latest",
+            messages=[
+                {
+                    "role": "user",
+                    "content": message.text
+                }
+            ]
+        )
+
+        # Responde no Telegram com o que a IA gerou
+        bot.reply_to(message, response["message"]["content"])
+
+    except Exception as e:
+        print(f"Erro na conversa: {e}")
+        bot.reply_to(message, "Ollamas está processando, mas houve um erro de conexão.")
+
 if __name__ == "__main__":
     bot.remove_webhook()
 
-    # Thread do Flask usando a variável 'app' definida no topo
+    # Thread do Flask para manter o bot vivo no Render/Heroku
     port = int(os.environ.get("PORT", 8080))
     t = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False))
     t.daemon = True
     t.start()
 
+    # Thread de notificações de agendamento
     t_notifica = threading.Thread(target=notify.loop_notificacao, args=(bot,))
     t_notifica.daemon = True
     t_notifica.start()
 
-    print("Bot Gotinha Ativado com Localização! 🚀")
+    print("Bot Gotinha Ativado com IA e Localização! 🚀")
     bot.infinity_polling()
