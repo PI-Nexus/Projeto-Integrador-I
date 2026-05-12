@@ -22,7 +22,7 @@ from src.scrap_cobertura import (
 from src.buscar_postos import buscar_postos_proximos,threading_search,start_drivers
 import src.notify as notify
 from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo, definir_categoria_por_idade, converter_periodo_para_meses, validar_data
-
+from src.audio_handler import processar_audio
 
 # 1. Configurações Iniciais
 load_dotenv()
