@@ -32,7 +32,7 @@ PALAVRAS_CHAVE = [
     (
         "faq",
         [
-            "duvida", "pergunta", "documento", "perguntas", "reacao",
+            "duvida", "pergunta", "documento", "perguntas", "reacao", "duvidas", "faq", "informacao",
         ],
     ),
     (
@@ -52,7 +52,7 @@ PALAVRAS_CHAVE = [
 ]
 
 # função para normalizar o texto removendo acentos e cecidilha
-def _normalizar(texto: str) -> str:
+def normalizar(texto: str) -> str:
     mapa = str.maketrans(
         "àáâãäçèéêëìíîïòóôõöùúûüýÀÁÂÃÄÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝ",
         "aaaааceeeeiiiiooooouuuuyAAAAACEEEEIIIIOOOOOUUUUY",
@@ -84,17 +84,17 @@ def transcrever_audio(caminho_arquivo: str) -> str:
 
 # função que classifica o áudio com base nas palavras chaves definidas
 def classificar_comando(texto: str) -> dict:
-    texto_normalizado = _normalizar(texto)
+    texto_normalizado = normalizar(texto)
     for categoria, palavras in PALAVRAS_CHAVE:
         for palavra in palavras:
-            palavra_normalizada = _normalizar(palavra)
+            palavra_normalizada = normalizar(palavra)
             if re.search(rf"\b{re.escape(palavra_normalizada)}\b", texto_normalizado):
                 return {
                     "categoria": categoria, 
                     "palavra_chave": palavra
                 }
     return {
-        "categoria": "desconecido", 
+        "categoria": "desconhecido", 
         "palavra_chave": None
     }
 
@@ -105,8 +105,9 @@ def processar_audio(bot, file_id: str) -> dict:
     try:
         caminho_arquivo = baixar_audio(bot, file_id)
         transcricao = transcrever_audio(caminho_arquivo)
-        classificacao = classificar_comando(transcricao)
-        return {"transcricao": transcricao, **classificacao}
+        transcricao_adaptada = normalizar(transcricao)
+        classificacao = classificar_comando(transcricao_adaptada)
+        return {"transcricao": transcricao_adaptada, **classificacao}
     finally:
         if caminho_arquivo and os.path.exists(caminho_arquivo):
             os.remove(caminho_arquivo)

@@ -272,6 +272,55 @@ def tratar_localizacao(msg):
         print(f"Erro GPS: {e}")
         bot.send_message(msg.chat.id, "⚠️ Erro ao consultar o portal de saúde.",parse_mode='Markdown')
 
+# tratamento de audio
+def rotear(classificacao: str, msg):
+    """Chama o handler correto sem depender da ordem de definição."""
+    if classificacao == "vacinas":
+        filtrar_pesquisa(msg)
+    elif classificacao == "cobertura_vacinal":
+        menu_cobertura(msg)
+    elif classificacao == "unidades_proximas":
+        pedir_localizacao(msg)
+    elif classificacao == "faq":
+        faq_menu(msg)
+    elif classificacao == "inicio":
+        servicos(msg)
+    elif classificacao == "encerrar":
+        finalizar_servico(msg)
+    else:
+        bot.send_message(msg.chat.id, "❓ Não consegui identificar sua solicitação. Veja as opções abaixo:")
+        servicos(msg)
+
+@bot.message_handler(content_types=["voice", "audio"])
+def tratar_audio(msg):
+    bot.send_message(msg.chat.id, "🎙️ Áudio recebido! Processando... aguarde ⏳")
+ 
+    try:
+        file_id = msg.voice.file_id if msg.content_type == "voice" else msg.audio.file_id
+ 
+        resultado = processar_audio(bot, file_id)
+ 
+        transcricao = resultado["transcricao"]
+        classificacao = resultado["categoria"]
+ 
+        # Confirma ao usuário o que foi entendido
+        bot.send_message(
+            msg.chat.id,
+            f'🗣️ <i>Entendi: "{transcricao}"</i>\n\nClassificação: {classificacao}',
+            parse_mode="HTML",
+        )
+ 
+        rotear(classificacao, msg)
+ 
+    except Exception as e:
+        print(f'{transcricao}')
+        print(f"[audio_handler] Erro: {e}")
+        bot.send_message(
+            msg.chat.id,
+            "⚠️ Não consegui processar o áudio. Tente novamente ou use o menu de texto.",
+        )
+        servicos(msg)
+
 # FLUXO DE VACINAS
 @bot.message_handler(func=lambda msg: msg.text == "Vacinas")
 def filtrar_pesquisa(msg):
