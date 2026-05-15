@@ -10,6 +10,7 @@ from telebot import types
 from telebot.types import ReplyKeyboardRemove
 from dotenv import load_dotenv
 from flask import Flask
+import ollama
 
 # Módulos internos
 from src.scrap import formatar_mensagem_bot, scrap
@@ -23,7 +24,7 @@ from src.buscar_postos import buscar_postos_proximos,threading_search,start_driv
 import src.notify as notify
 from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo, definir_categoria_por_idade, converter_periodo_para_meses, validar_data
 from src.audio_handler import processar_audio
-
+from src.tools.tools import tools
 # 1. Configurações Iniciais
 load_dotenv()
 TOKEN = os.getenv('TOKEN_BOT')
@@ -606,6 +607,175 @@ def faq_reactions(msg):
     markup.add('Documentos Necessários', 'Voltar ao Menu Principal')
     bot.send_message(msg.chat.id, "Febre Leve e Cansaço de 3 dias no máximo",
     reply_markup=markup, parse_mode="Markdown")
+
+# LLM
+@bot.message_handler(func=lambda m: True)
+def linguagem_natural(message):
+
+    response = ollama.chat(
+        model="llama3.2:latest",
+
+        messages=[
+            {
+    "role": "system",
+    "content": """
+    Você é o Assistente Gotinha,
+    um assistente especializado em vacinação,
+    saúde pública e orientação vacinal.
+
+    Seu objetivo é:
+    - ajudar usuários sobre vacinas
+    - explicar doenças
+    - orientar sobre campanhas
+    - orientar sobre calendário vacinal
+    - explicar efeitos colaterais comuns
+    - orientar localização de UBS
+    - orientar cobertura vacinal
+
+    Regras:
+    - responda de forma clara
+    - responda de forma humana
+    - seja curto e objetivo
+    - não invente informações médicas
+    - use ferramentas quando necessário
+
+    Ferramentas disponíveis:
+
+    - pedir_localizacao:
+      usar para UBS próximas
+
+    - servicos:
+      usar para abrir menu principal
+
+    - escolher_regiao:
+      usar para cobertura vacinal
+
+    - dashboard:
+      usar para Power BI e gráficos
+
+    - processar_dados:
+      usar quando o usuário informar data de nascimento
+
+    - comandos:
+      usar para início e ajuda
+    """
+    },
+
+            {
+                "role": "user",
+                "content": message.text
+            }
+        ],
+
+        tools=tools
+    )
+
+    msg = response["message"]
+
+    # TOOL CALLS
+    if msg.get("tool_calls"):
+
+        for tool in msg["tool_calls"]:
+
+            try:
+
+                function_name = tool["function"]["name"]
+
+                # MENU / START
+                if function_name == "comandos":
+                    comandos(message)
+                    return
+
+                # MENU PRINCIPAL
+                elif function_name == "servicos":
+                    servicos(message)
+                    return
+
+                # LOCALIZAÇÃO
+                elif function_name == "pedir_localizacao":
+                    pedir_localizacao(message)
+                    return
+
+                # COBERTURA VACINAL
+                elif function_name == "escolher_regiao":
+                    escolher_regiao(message)
+                    return
+
+                # DASHBOARD
+                elif function_name == "dashboard":
+                    dashboard(message)
+                    return
+
+                # VACINAS POR IDADE
+                elif function_name == "processar_dados":
+
+                    argumentos = tool["function"].get(
+                        "arguments",
+                        {}
+                    )
+
+                    data_nascimento = argumentos.get(
+                        "data_nascimento"
+                    )
+
+                    if not data_nascimento:
+
+                        bot.reply_to(
+                            message,
+                            "⚠️ Não consegui identificar sua data de nascimento."
+                        )
+
+                        return
+
+                    # simulando mensagem do usuário
+                    class FakeMessage:
+
+                        def __init__(self, text, chat_id):
+
+                            self.text = text
+
+                            class Chat:
+
+                                def __init__(self, chat_id):
+                                    self.id = chat_id
+
+                            self.chat = Chat(chat_id)
+
+                    fake_msg = FakeMessage(
+                        text=data_nascimento,
+                        chat_id=message.chat.id
+                    )
+
+                    processar_dados(fake_msg)
+
+                    return
+
+            except Exception as e:
+
+                print(f"[ERRO TOOL CALL] {e}")
+
+                bot.reply_to(
+                    message,
+                    "⚠️ Ocorreu um erro ao processar sua solicitação."
+                )
+
+                return
+
+    # RESPOSTA NORMAL
+    if msg.get("content"):
+
+        bot.reply_to(
+            message,
+            msg["content"]
+        )
+
+    else:
+
+        bot.reply_to(
+            message,
+            "❓ Não consegui entender. Tente novamente."
+        )
+
 
 # EXECUÇÃO
 
