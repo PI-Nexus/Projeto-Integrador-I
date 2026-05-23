@@ -10,6 +10,7 @@ from telebot import types
 from telebot.types import ReplyKeyboardRemove
 from dotenv import load_dotenv
 from flask import Flask
+import ollama
 
 # Módulos internos
 from src.scrap import formatar_mensagem_bot, scrap
@@ -22,10 +23,8 @@ from src.scrap_cobertura import (
 from src.buscar_postos import buscar_postos_proximos,threading_search,start_drivers
 import src.notify as notify
 from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo, definir_categoria_por_idade, converter_periodo_para_meses, validar_data
-import src.ollama as ol
-from ollama import chat
-
-
+from src.audio_handler import processar_audio
+from src.tools.tools import tools
 # 1. Configurações Iniciais
 load_dotenv()
 TOKEN = os.getenv('TOKEN_BOT')
@@ -273,6 +272,55 @@ def tratar_localizacao(msg):
     except Exception as e:
         print(f"Erro GPS: {e}")
         bot.send_message(msg.chat.id, "⚠️ Erro ao consultar o portal de saúde.",parse_mode='Markdown')
+
+# tratamento de audio
+def rotear(classificacao: str, msg):
+    """Chama o handler correto sem depender da ordem de definição."""
+    if classificacao == "vacinas":
+        filtrar_pesquisa(msg)
+    elif classificacao == "cobertura_vacinal":
+        menu_cobertura(msg)
+    elif classificacao == "unidades_proximas":
+        pedir_localizacao(msg)
+    elif classificacao == "faq":
+        faq_menu(msg)
+    elif classificacao == "inicio":
+        servicos(msg)
+    elif classificacao == "encerrar":
+        finalizar_servico(msg)
+    else:
+        bot.send_message(msg.chat.id, "❓ Não consegui identificar sua solicitação. Veja as opções abaixo:")
+        servicos(msg)
+
+@bot.message_handler(content_types=["voice", "audio"])
+def tratar_audio(msg):
+    bot.send_message(msg.chat.id, "🎙️ Áudio recebido! Processando... aguarde ⏳")
+ 
+    try:
+        file_id = msg.voice.file_id if msg.content_type == "voice" else msg.audio.file_id
+ 
+        resultado = processar_audio(bot, file_id)
+ 
+        transcricao = resultado["transcricao"]
+        classificacao = resultado["categoria"]
+ 
+        # Confirma ao usuário o que foi entendido
+        bot.send_message(
+            msg.chat.id,
+            f'🗣️ <i>Entendi: "{transcricao}"</i>\n\nClassificação: {classificacao}',
+            parse_mode="HTML",
+        )
+ 
+        rotear(classificacao, msg)
+ 
+    except Exception as e:
+        print(f'{transcricao}')
+        print(f"[audio_handler] Erro: {e}")
+        bot.send_message(
+            msg.chat.id,
+            "⚠️ Não consegui processar o áudio. Tente novamente ou use o menu de texto.",
+        )
+        servicos(msg)
 
 # FLUXO DE VACINAS
 @bot.message_handler(func=lambda msg: msg.text == "Vacinas")
@@ -560,73 +608,247 @@ def faq_reactions(msg):
     bot.send_message(msg.chat.id, "Febre Leve e Cansaço de 3 dias no máximo",
     reply_markup=markup, parse_mode="Markdown")
 
-# EXECUÇÃO
-
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "servicos",
-            "description": (
-                "Fornece servicos disponiveis com botoes : 'Início','Vacinas','Cobertura Vacinal','Unidades próximas','FAQ' "
-                "Para ver barra de servicos em botoes , semelhante ao menu "
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {}
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "pedir_localizacao",
-            "description": (
-                "Solicita a localização do usuário "
-                "para encontrar UBS ou vacinas próximas"
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {}
-            }
-        }
-    }
-]
-
+# LLM
 @bot.message_handler(func=lambda m: True)
-def conversar(message):
-    try:
-        # Envia a mensagem diretamente para o modelo que você baixou
-        response = chat(
-            model="llama3.2:latest",
-            messages=[
-                {
-                    "role": "user",
-                    "content": message.text
-                }
-            ]
-        )
+def linguagem_natural(message):
+    texto_usuario = message.text.strip()
 
-        # Responde no Telegram com o que a IA gerou
-        bot.reply_to(message, response["message"]["content"])
+    # --- TRAVA DE SEGURANÇA PARA INPUTS CURTOS (Opcional, poupa processamento) ---
+    texto_min = texto_usuario.lower()
+    if texto_min in ["oi", "olá", "ola", "tudo bem", "tudo bem?", "bom dia", "boa tarde", "boa noite"]:
+        servicos(message)
+        return
+
+    try:
+        # Passo 1: Perguntar ao modelo qual é a intenção real do usuário
+        PROMPT_CLASSIFICADOR = """
+        Analise a mensagem do usuário e responda APENAS com uma das seguintes palavras-chave, sem pontos ou explicações adicionais:
+        - 'TEXTO' : Se for uma dúvida teórica, explicação, saudação ou pergunta sobre reações/doenças/sintomas.
+        - 'DASHBOARD' : Se ele quer ver gráficos, dados estatísticos ou acessar o Power BI.
+        - 'LOCALIZACAO' : Se ele quer achar postos, encontrar uma UBS ou ver postos de saúde próximos.
+        - 'MENU' : Se ele quer ajuda com comandos, voltar ao início ou ver os serviços/botões do bot.
+        - 'DATA' : Se ele informou ou digitou uma data de nascimento.
+
+        Mensagem: "{}"
+        Resposta:"""
+
+        classificacao_resp = ollama.chat(
+            model="llama3.2:latest",
+            messages=[{"role": "user", "content": PROMPT_CLASSIFICADOR.format(texto_usuario)}]
+        )
+        
+        # Limpa completamente a resposta para evitar quebra de strings
+        intencao = classificacao_resp["message"]["content"].strip().upper()
+
+        # Passo 2: Roteamento baseado na resposta
+        if "DASHBOARD" in intencao:
+            dashboard(message)
+            return
+            
+        elif "LOCALIZACAO" in intencao:
+            pedir_localizacao(message)
+            return
+            
+        elif "MENU" in intencao:
+            servicos(message)
+            return
+            
+        elif "DATA" in intencao:
+            # 🔍 CORREÇÃO CRÍTICA: Extrai a data no formato DD/MM/AAAA usando Regex
+            padrao_data = r'(\d{2}/\d{2}/\d{4})'
+            match = re.search(padrao_data, texto_usuario)
+            
+            if match:
+                data_extraida = match.group(1)
+                
+                # Cria o objeto simulado (FakeMessage) que seu processo_dados espera
+                class FakeMessage:
+                    def __init__(self, text, chat_id):
+                        self.text = text
+                        class Chat:
+                            def __init__(self, chat_id):
+                                self.id = chat_id
+                        self.chat = Chat(chat_id)
+                
+                fake_msg = FakeMessage(text=data_extraida, chat_id=message.chat.id)
+                processar_dados(fake_msg)
+            else:
+                # Se o classificador achou que era DATA mas o usuário não pôs uma data válida
+                bot.reply_to(message, "⚠️ Por favor, informe sua data de nascimento no formato DD/MM/AAAA para que eu possa consultar suas vacinas.")
+            return
+            
+        else:
+            # Se for TEXTO ou qualquer fallback, responde puramente em texto comum
+            resposta_direta = ollama.chat(
+                model="llama3.2:latest",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": (
+                            "Você é o Assistente Gotinha, um assistente virtual especializado em vacinação e saúde. "
+                            "Responda à dúvida do usuário de forma humana, muito curta, clara e direta. "
+                            "Não invente dados médicos se não souber."
+                        )
+                    },
+                    {"role": "user", "content": texto_usuario}
+                ]
+            )
+            
+            conteudo_resposta = resposta_direta["message"].get("content", "").strip()
+            
+            if conteudo_resposta:
+                bot.reply_to(message, conteudo_resposta)
+            else:
+                bot.reply_to(message, "Estou aqui! Como posso te ajudar com suas vacinas hoje? Se quiser ver minhas opções, digite 'Início'.")
 
     except Exception as e:
-        print(f"Erro na conversa: {e}")
-        bot.reply_to(message, "Ollamas está processando, mas houve um erro de conexão.")
+        print(f"[ERRO LLM LINGUAGEM NATURAL] {e}")
+        bot.reply_to(message, "⚠️ Desculpe, tive um pequeno problema ao processar sua mensagem. Poderia tentar novamente?")@bot.message_handler(func=lambda m: True)
+
+def linguagem_natural(message):
+    texto_usuario = message.text.strip()
+
+    # --- TRAVA DE SEGURANÇA PARA INPUTS CURTOS (Opcional, poupa processamento) ---
+    texto_min = texto_usuario.lower()
+    if texto_min in ["oi", "olá", "ola", "tudo bem", "tudo bem?", "bom dia", "boa tarde", "boa noite"]:
+        servicos(message)
+        return
+
+    try:
+        # Passo 1: Perguntar ao modelo qual é a intenção real do usuário
+        PROMPT_CLASSIFICADOR = """
+        Analise a mensagem do usuário e responda APENAS com uma das seguintes palavras-chave, sem pontos ou explicações adicionais:
+        - 'TEXTO' : Se for uma dúvida teórica, explicação, saudação ou pergunta sobre reações/doenças/sintomas.
+        - 'DASHBOARD' : Se ele quer ver gráficos, dados estatísticos ou acessar o Power BI.
+        - 'LOCALIZACAO' : Se ele quer achar postos, encontrar uma UBS ou ver postos de saúde próximos.
+        - 'MENU' : Se ele quer ajuda com comandos, voltar ao início ou ver os serviços/botões do bot.
+        - 'DATA' : Se ele informou ou digitou uma data de nascimento.
+
+        Mensagem: "{}"
+        Resposta:"""
+
+        classificacao_resp = ollama.chat(
+            model="llama3.2:latest",
+            messages=[{"role": "user", "content": PROMPT_CLASSIFICADOR.format(texto_usuario)}]
+        )
+        
+        # Limpa completamente a resposta para evitar quebra de strings
+        intencao = classificacao_resp["message"]["content"].strip().upper()
+
+        # Passo 2: Roteamento baseado na resposta
+        if "DASHBOARD" in intencao:
+            dashboard(message)
+            return
+            
+        elif "LOCALIZACAO" in intencao:
+            pedir_localizacao(message)
+            return
+            
+        elif "MENU" in intencao:
+            servicos(message)
+            return
+            
+        elif "DATA" in intencao:
+            # 🔍 CORREÇÃO CRÍTICA: Extrai a data no formato DD/MM/AAAA usando Regex
+            padrao_data = r'(\d{2}/\d{2}/\d{4})'
+            match = re.search(padrao_data, texto_usuario)
+            
+            if match:
+                data_extraida = match.group(1)
+                
+                # Cria o objeto simulado (FakeMessage) que seu processo_dados espera
+                class FakeMessage:
+                    def __init__(self, text, chat_id):
+                        self.text = text
+                        class Chat:
+                            def __init__(self, chat_id):
+                                self.id = chat_id
+                        self.chat = Chat(chat_id)
+                
+                fake_msg = FakeMessage(text=data_extraida, chat_id=message.chat.id)
+                processar_dados(fake_msg)
+            else:
+                # Se o classificador achou que era DATA mas o usuário não pôs uma data válida
+                bot.reply_to(message, "⚠️ Por favor, informe sua data de nascimento no formato DD/MM/AAAA para que eu possa consultar suas vacinas.")
+            return    
+        else:
+            # --- CAPTURA DE IDADE POR EXTENSO (Task do Calendário) ---
+            # Busca por números isolados na mensagem do usuário
+            padrao_idade = r'(\d+)'
+            match_idade = re.search(padrao_idade, texto_usuario)
+
+            # Se achou um número e a mensagem tem a ver com vacinação/idade
+            if match_idade and any(palavra in texto_usuario.lower() for palavra in ["anos", "tomar", "vacina", "idade", "calendario"]):
+                idade_anos = int(match_idade.group(1))
+                
+                # 1. Identifica a categoria (ex: "adolescente" para 15 anos)
+                id_site = definir_categoria_por_idade(idade_anos)
+                
+                # 2. Faz a raspagem/leitura do arquivo do calendário oficial
+                dados_vacinas = scrap(id_site)
+                
+                if dados_vacinas:
+                    # 3. Prompt para o Ollama resumir os dados que VOCÊ coletou do projeto
+                    PROMPT_RESUMO = """
+                    Você é o Assistente Gotinha, um assistente virtual de saúde.
+                    O usuário informou que tem {} anos. Com base nos dados oficiais do calendário de vacinação abaixo,
+                    gere um resumo humanizado, CURTO e direto em tópicos com as vacinas recomendadas para esta faixa etária.
+                    
+                    Dados Oficiais do Calendário:
+                    {}
+                    """
+                    
+                    resposta_resumida = ollama.chat(
+                        model="llama3.2:latest",
+                        messages=[
+                            {"role": "user", "content": PROMPT_RESUMO.format(idade_anos, dados_vacinas)}
+                        ]
+                    )
+                    
+                    bot.reply_to(message, resposta_resumida["message"]["content"].strip())
+                    return
+                else:
+                    bot.reply_to(message, f"Não encontrei dados de vacinação específicos para a idade de {idade_anos} anos.")
+                    return
+
+            # --- FLUXO PARA TEXTOS GERAIS (Sem idades informadas) ---
+            resposta_direta = ollama.chat(
+                model="llama3.2:latest",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": (
+                            "Você é o Assistente Gotinha, um assistente especializado em vacinação. "
+                            "Responda de forma curta, clara e direta."
+                        )
+                    },
+                    {"role": "user", "content": texto_usuario}
+                ]
+            )
+            
+            conteudo_resposta = resposta_direta["message"].get("content", "").strip()
+            if conteudo_resposta:
+                bot.reply_to(message, conteudo_resposta)
+            else:
+                bot.reply_to(message, "Estou aqui! Como posso te ajudar?")
+    except Exception as e:
+        print(f"[ERRO LLM LINGUAGEM NATURAL] {e}")
+        bot.reply_to(message, "⚠️ Desculpe, tive um pequeno problema ao processar sua mensagem. Poderia tentar novamente?")
+
+# EXECUÇÃO
 
 if __name__ == "__main__":
     bot.remove_webhook()
 
-    # Thread do Flask para manter o bot vivo no Render/Heroku
+    # Thread do Flask usando a variável 'app' definida no topo
     port = int(os.environ.get("PORT", 8080))
     t = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False))
     t.daemon = True
     t.start()
 
-    # Thread de notificações de agendamento
     t_notifica = threading.Thread(target=notify.loop_notificacao, args=(bot,))
     t_notifica.daemon = True
     t_notifica.start()
 
-    print("Bot Gotinha Ativado com IA e Localização! 🚀")
+    print("Bot Gotinha Ativado com Localização! 🚀")
     bot.infinity_polling()
