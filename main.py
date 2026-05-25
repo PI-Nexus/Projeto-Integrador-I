@@ -25,6 +25,8 @@ import src.notify as notify
 from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo, definir_categoria_por_idade, converter_periodo_para_meses, validar_data
 from src.audio_handler import processar_audio
 from src.tools.tools import tools
+from src.google_calendar import gerar_link_google_calendar
+
 # 1. Configurações Iniciais
 load_dotenv()
 TOKEN = os.getenv('TOKEN_BOT')
@@ -527,7 +529,7 @@ def perguntar_data_vacina(msg, email, lista_vacinas, index):
 
 def processar_data_e_proxima(msg, email, lista_vacinas, index):
     chat_id = msg.chat.id
-    data_texto = msg.text
+    data_texto = msg.text   
     data_alvo = validar_data(data_texto)
     hoje = datetime.now().date() # Pega apenas a data atual (sem horas)
 
@@ -546,6 +548,11 @@ def processar_data_e_proxima(msg, email, lista_vacinas, index):
     # Se passou nas validações, salva e segue para a próxima
     vacina_atual = lista_vacinas[index]
     notify.salvar_agendamento(chat_id, email, vacina_atual['vacina'], data_alvo)
+    link = gerar_link_google_calendar(vacina_atual['vacina'], data_alvo)
+    bot.send_message(
+        chat_id,
+        f"📅 <a href='{link}'>Adicionar {vacina_atual['vacina']} ao Google Calendar</a>",
+        parse_mode="HTML")
 
     # Próxima vacina da lista
     perguntar_data_vacina(msg, email, lista_vacinas, index + 1)
