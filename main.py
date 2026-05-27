@@ -621,24 +621,32 @@ def linguagem_natural(message):
 
     try:
         # Passo 1: Perguntar ao modelo qual é a intenção real do usuário
-        PROMPT_CLASSIFICADOR = """
-        Analise a mensagem do usuário e responda APENAS com uma das seguintes palavras-chave, sem pontos ou explicações adicionais:
-        - 'TEXTO' : Se for uma dúvida teórica, explicação, saudação ou pergunta sobre reações/doenças/sintomas.
-        - 'DASHBOARD' : Se ele quer ver gráficos, dados estatísticos ou acessar o Power BI.
-        - 'LOCALIZACAO' : Se ele quer achar postos, encontrar uma UBS ou ver postos de saúde próximos.
-        - 'MENU' : Se ele quer ajuda com comandos, voltar ao início ou ver os serviços/botões do bot.
-        - 'DATA' : Se ele informou ou digitou uma data de nascimento.
+        print(f"[LOG]: {datetime.now().year}")
+        PROMPT_CLASSIFICADOR = f"""
+            Mensagem: "{texto_usuario}"
 
-        Mensagem: "{}"
-        Resposta:"""
+            Analise a mensagem do usuário e responda APENAS com uma das seguintes saídas:
+
+            - Se a mensagem pedir gráficos/dados: 'DASHBOARD'
+            - Se a mensagem pedir localização de postos/UBS: 'LOCALIZACAO'
+            - Se a mensagem pedir ajuda/menu: 'MENU'
+            - Se a mensagem contiver UMA DATA de nascimento (ex: 12/05/1990): Retorne APENAS a data encontrada no formato 'DD/MM/AAAA'.
+            - Se a mensagem contiver UMA IDADE (ex: "tenho 20 anos", "nasci há 30 anos"): Calcule a data de nascimento e retorne no formato '01/01/AAAA' ; DATA_ATUAL = {datetime.now()}
+            
+            Resposta:
+        """
 
         classificacao_resp = ollama.chat(
             model="llama3.2:latest",
-            messages=[{"role": "user", "content": PROMPT_CLASSIFICADOR.format(texto_usuario)}]
+            messages=[{"role": "user", "content": PROMPT_CLASSIFICADOR}]
         )
         
         # Limpa completamente a resposta para evitar quebra de strings
         intencao = classificacao_resp["message"]["content"].strip().upper()
+        print(f"[LOG]: {intencao}")
+
+        # Verifica se o modelo retornou uma data válida (formato DD/MM/AAAA)
+        padrao_data = r'^\d{2}/\d{2}/\d{4}$'
 
         # Passo 2: Roteamento baseado na resposta
         if "DASHBOARD" in intencao:
@@ -653,29 +661,20 @@ def linguagem_natural(message):
             servicos(message)
             return
             
-        elif "DATA" in intencao:
-            # 🔍 CORREÇÃO CRÍTICA: Extrai a data no formato DD/MM/AAAA usando Regex
-            padrao_data = r'(\d{2}/\d{2}/\d{4})'
-            match = re.search(padrao_data, texto_usuario)
+        elif re.match(padrao_data, intencao):
+            # Se o modelo retornou uma data, é porque ele processou a Data ou a Idade
+            # Cria o objeto FakeMessage e chama o processar_dados
+            class FakeMessage:
+                def __init__(self, text, original_message):
+                    self.text = text
+                    self.chat = original_message.chat
+                    self.message_id = original_message.message_id  # Essencial para reply_to
+                    
+            print(f"[LOG]: re.match")
+            fake_msg = FakeMessage(text=intencao, original_message=message)
+            print(f"[LOG]: FakeMessage = {fake_msg}")
+            processar_dados(fake_msg)
             
-            if match:
-                data_extraida = match.group(1)
-                
-                # Cria o objeto simulado (FakeMessage) que seu processo_dados espera
-                class FakeMessage:
-                    def __init__(self, text, chat_id):
-                        self.text = text
-                        class Chat:
-                            def __init__(self, chat_id):
-                                self.id = chat_id
-                        self.chat = Chat(chat_id)
-                
-                fake_msg = FakeMessage(text=data_extraida, chat_id=message.chat.id)
-                processar_dados(fake_msg)
-            else:
-                # Se o classificador achou que era DATA mas o usuário não pôs uma data válida
-                bot.reply_to(message, "⚠️ Por favor, informe sua data de nascimento no formato DD/MM/AAAA para que eu possa consultar suas vacinas.")
-            return
             
         else:
             # Se for TEXTO ou qualquer fallback, responde puramente em texto comum
@@ -705,137 +704,6 @@ def linguagem_natural(message):
         print(f"[ERRO LLM LINGUAGEM NATURAL] {e}")
         bot.reply_to(message, "⚠️ Desculpe, tive um pequeno problema ao processar sua mensagem. Poderia tentar novamente?")@bot.message_handler(func=lambda m: True)
 
-def linguagem_natural(message):
-    texto_usuario = message.text.strip()
-
-    # --- TRAVA DE SEGURANÇA PARA INPUTS CURTOS (Opcional, poupa processamento) ---
-    texto_min = texto_usuario.lower()
-    if texto_min in ["oi", "olá", "ola", "tudo bem", "tudo bem?", "bom dia", "boa tarde", "boa noite"]:
-        servicos(message)
-        return
-
-    try:
-        # Passo 1: Perguntar ao modelo qual é a intenção real do usuário
-        PROMPT_CLASSIFICADOR = """
-        Analise a mensagem do usuário e responda APENAS com uma das seguintes palavras-chave, sem pontos ou explicações adicionais:
-        - 'TEXTO' : Se for uma dúvida teórica, explicação, saudação ou pergunta sobre reações/doenças/sintomas.
-        - 'DASHBOARD' : Se ele quer ver gráficos, dados estatísticos ou acessar o Power BI.
-        - 'LOCALIZACAO' : Se ele quer achar postos, encontrar uma UBS ou ver postos de saúde próximos.
-        - 'MENU' : Se ele quer ajuda com comandos, voltar ao início ou ver os serviços/botões do bot.
-        - 'DATA' : Se ele informou ou digitou uma data de nascimento.
-
-        Mensagem: "{}"
-        Resposta:"""
-
-        classificacao_resp = ollama.chat(
-            model="llama3.2:latest",
-            messages=[{"role": "user", "content": PROMPT_CLASSIFICADOR.format(texto_usuario)}]
-        )
-        
-        # Limpa completamente a resposta para evitar quebra de strings
-        intencao = classificacao_resp["message"]["content"].strip().upper()
-
-        # Passo 2: Roteamento baseado na resposta
-        if "DASHBOARD" in intencao:
-            dashboard(message)
-            return
-            
-        elif "LOCALIZACAO" in intencao:
-            pedir_localizacao(message)
-            return
-            
-        elif "MENU" in intencao:
-            servicos(message)
-            return
-            
-        elif "DATA" in intencao:
-            # 🔍 CORREÇÃO CRÍTICA: Extrai a data no formato DD/MM/AAAA usando Regex
-            padrao_data = r'(\d{2}/\d{2}/\d{4})'
-            match = re.search(padrao_data, texto_usuario)
-            
-            if match:
-                data_extraida = match.group(1)
-                
-                # Cria o objeto simulado (FakeMessage) que seu processo_dados espera
-                class FakeMessage:
-                    def __init__(self, text, chat_id):
-                        self.text = text
-                        class Chat:
-                            def __init__(self, chat_id):
-                                self.id = chat_id
-                        self.chat = Chat(chat_id)
-                
-                fake_msg = FakeMessage(text=data_extraida, chat_id=message.chat.id)
-                processar_dados(fake_msg)
-            else:
-                # Se o classificador achou que era DATA mas o usuário não pôs uma data válida
-                bot.reply_to(message, "⚠️ Por favor, informe sua data de nascimento no formato DD/MM/AAAA para que eu possa consultar suas vacinas.")
-            return    
-        else:
-            # --- CAPTURA DE IDADE POR EXTENSO (Task do Calendário) ---
-            # Busca por números isolados na mensagem do usuário
-            padrao_idade = r'(\d+)'
-            match_idade = re.search(padrao_idade, texto_usuario)
-
-            # Se achou um número e a mensagem tem a ver com vacinação/idade
-            if match_idade and any(palavra in texto_usuario.lower() for palavra in ["anos", "tomar", "vacina", "idade", "calendario"]):
-                idade_anos = int(match_idade.group(1))
-                
-                # 1. Identifica a categoria (ex: "adolescente" para 15 anos)
-                id_site = definir_categoria_por_idade(idade_anos)
-                
-                # 2. Faz a raspagem/leitura do arquivo do calendário oficial
-                dados_vacinas = scrap(id_site)
-                
-                if dados_vacinas:
-                    # 3. Prompt para o Ollama resumir os dados que VOCÊ coletou do projeto
-                    PROMPT_RESUMO = """
-                    Você é o Assistente Gotinha, um assistente virtual de saúde.
-                    O usuário informou que tem {} anos. Com base nos dados oficiais do calendário de vacinação abaixo,
-                    gere um resumo humanizado, CURTO e direto em tópicos com as vacinas recomendadas para esta faixa etária.
-                    
-                    Dados Oficiais do Calendário:
-                    {}
-                    """
-                    
-                    resposta_resumida = ollama.chat(
-                        model="llama3.2:latest",
-                        messages=[
-                            {"role": "user", "content": PROMPT_RESUMO.format(idade_anos, dados_vacinas)}
-                        ]
-                    )
-                    
-                    bot.reply_to(message, resposta_resumida["message"]["content"].strip())
-                    return
-                else:
-                    bot.reply_to(message, f"Não encontrei dados de vacinação específicos para a idade de {idade_anos} anos.")
-                    return
-
-            # --- FLUXO PARA TEXTOS GERAIS (Sem idades informadas) ---
-            resposta_direta = ollama.chat(
-                model="llama3.2:latest",
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": (
-                            "Você é o Assistente Gotinha, um assistente especializado em vacinação. "
-                            "Responda de forma curta, clara e direta."
-                        )
-                    },
-                    {"role": "user", "content": texto_usuario}
-                ]
-            )
-            
-            conteudo_resposta = resposta_direta["message"].get("content", "").strip()
-            if conteudo_resposta:
-                bot.reply_to(message, conteudo_resposta)
-            else:
-                bot.reply_to(message, "Estou aqui! Como posso te ajudar?")
-    except Exception as e:
-        print(f"[ERRO LLM LINGUAGEM NATURAL] {e}")
-        bot.reply_to(message, "⚠️ Desculpe, tive um pequeno problema ao processar sua mensagem. Poderia tentar novamente?")
-
-# EXECUÇÃO
 
 if __name__ == "__main__":
     bot.remove_webhook()
