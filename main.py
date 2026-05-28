@@ -275,54 +275,51 @@ def tratar_localizacao(msg):
         print(f"Erro GPS: {e}")
         bot.send_message(msg.chat.id, "⚠️ Erro ao consultar o portal de saúde.",parse_mode='Markdown')
 
-# tratamento de audio
-def rotear(classificacao: str, msg):
-    """Chama o handler correto sem depender da ordem de definição."""
-    if classificacao == "vacinas":
-        filtrar_pesquisa(msg)
-    elif classificacao == "cobertura_vacinal":
-        menu_cobertura(msg)
-    elif classificacao == "unidades_proximas":
-        pedir_localizacao(msg)
-    elif classificacao == "faq":
-        faq_menu(msg)
-    elif classificacao == "inicio":
-        servicos(msg)
-    elif classificacao == "encerrar":
-        finalizar_servico(msg)
-    else:
-        bot.send_message(msg.chat.id, "❓ Não consegui identificar sua solicitação. Veja as opções abaixo:")
-        servicos(msg)
-
 @bot.message_handler(content_types=["voice", "audio"])
 def tratar_audio(msg):
     bot.send_message(msg.chat.id, "🎙️ Áudio recebido! Processando... aguarde ⏳")
- 
+
+    transcricao = ""
     try:
         file_id = msg.voice.file_id if msg.content_type == "voice" else msg.audio.file_id
- 
+
         resultado = processar_audio(bot, file_id)
- 
         transcricao = resultado["transcricao"]
-        classificacao = resultado["categoria"]
- 
-        # Confirma ao usuário o que foi entendido
+        tipo        = resultado["tipo"]
+        valor       = resultado["valor"]
+
         bot.send_message(
             msg.chat.id,
-            f'🗣️ <i>Entendi: "{transcricao}"</i>\n\nClassificação: {classificacao}',
+            f'🗣️ <i>Entendi: "{transcricao}"</i>',
             parse_mode="HTML",
         )
- 
-        rotear(classificacao, msg)
- 
+
+        # PERGUNTA — resposta direta do Gotinha
+        if tipo == "resposta":
+            bot.reply_to(msg, valor)
+            return
+
+        # FUNÇÃO — roteia para os handlers principais
+        if valor == "inicio":
+            resposta_inicio(msg)
+        elif valor == "cobertura_vacinal":
+            menu_cobertura(msg)
+        elif valor == "localizacao":
+            pedir_localizacao(msg)
+        elif valor == "consulta_vacinas":
+            filtrar_pesquisa(msg)
+        elif valor == "fim":
+            finalizar_servico(msg)
+        else:
+            resposta_inicio(msg)
+
     except Exception as e:
-        print(f'{transcricao}')
-        print(f"[audio_handler] Erro: {e}")
+        print(f"[tratar_audio] transcrição: '{transcricao}' | erro: {e}")
         bot.send_message(
             msg.chat.id,
             "⚠️ Não consegui processar o áudio. Tente novamente ou use o menu de texto.",
         )
-        servicos(msg)
+        resposta_inicio(msg)
 
 # FLUXO DE VACINAS
 @bot.message_handler(func=lambda msg: msg.text == "Vacinas")
@@ -529,7 +526,7 @@ def perguntar_data_vacina(msg, email, lista_vacinas, index):
 
 def processar_data_e_proxima(msg, email, lista_vacinas, index):
     chat_id = msg.chat.id
-    data_texto = msg.text   
+    data_texto = msg.text
     data_alvo = validar_data(data_texto)
     hoje = datetime.now().date() # Pega apenas a data atual (sem horas)
 
@@ -600,20 +597,6 @@ def servico_final(msg):
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     markup.add('Encerrar', 'Continuar')
     bot.send_message(msg.chat.id, 'Deseja realizar outra consulta?', reply_markup=markup)
-
-@bot.message_handler(func=lambda msg: msg.text == "Documentos Necessários")
-def faq_documents(msg):
-    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Reações Comuns', 'Voltar ao Menu Principal')
-    bot.send_message(msg.chat.id, "Documento com Foto e Caderneta de Vacinação",
-    reply_markup=markup, parse_mode="Markdown")
-
-@bot.message_handler(func=lambda msg: msg.text == "Reações Comuns")
-def faq_reactions(msg):
-    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    markup.add('Documentos Necessários', 'Voltar ao Menu Principal')
-    bot.send_message(msg.chat.id, "Febre Leve e Cansaço de 3 dias no máximo",
-    reply_markup=markup, parse_mode="Markdown")
 
 # LLM
 @bot.message_handler(func=lambda m: True)
