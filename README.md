@@ -74,7 +74,7 @@ O foco do projeto é o algoritmo, sem o uso de persistência de dados (Banco de 
 |-------------------|------------|----------|-----------|
 | 01                | 05/04/2026 | concluído  | [MVP](MVP/sp1.md)  |
 | 02                | 03/05/2026 | concluído  | [MVP](MVP/sp2.md)  |
-| 03                | 31/05/2026 | a fazer  | [MVP](MVP/sp3.md) |
+| 03                | 31/05/2026 | concluído  | [MVP](MVP/sp3.md) |
 | Feira de Soluções | 11/06/2026 | a fazer  | [a fazer] |
 
 ---
