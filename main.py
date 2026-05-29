@@ -622,16 +622,18 @@ def linguagem_natural(message):
     try:
         # Passo 1: Perguntar ao modelo qual é a intenção real do usuário
         print(f"[LOG]: {datetime.now().year}")
+        ano_atual = datetime.now().year
         PROMPT_CLASSIFICADOR = f"""
             Mensagem: "{texto_usuario}"
 
-            Analise a mensagem do usuário e responda APENAS com uma das seguintes saídas:
+            Analise a mensagem do usuário e classifique a intenção retornando APENAS UMA das opções abaixo. Não adicione nenhuma outra palavra.
 
-            - Se a mensagem pedir gráficos/dados: 'DASHBOARD'
-            - Se a mensagem pedir localização de postos/UBS: 'LOCALIZACAO'
-            - Se a mensagem pedir ajuda/menu: 'MENU'
-            - Se a mensagem contiver UMA DATA de nascimento (ex: 12/05/1990): Retorne APENAS a data encontrada no formato 'DD/MM/AAAA'.
-            - Se a mensagem contiver UMA IDADE (ex: "tenho 20 anos", "nasci há 30 anos"): Calcule a data de nascimento e retorne no formato '01/01/AAAA' ; DATA_ATUAL = {datetime.now()}
+            - Se a mensagem pedir gráficos, estatísticas ou dados: DASHBOARD
+            - Se a mensagem pedir localização de postos/UBS: LOCALIZACAO
+            - Se a mensagem pedir ajuda ou o menu inicial: MENU
+            - Se a mensagem contiver UMA DATA de nascimento explícita (ex: 12/05/1990): retorne APENAS a data no formato DD/MM/AAAA
+            - Se a mensagem contiver UMA IDADE (ex: "tenho 20 anos", "nasci há 30 anos"): subtraia a idade do ano atual ({ano_atual}) e retorne APENAS a data de nascimento no formato 01/01/ANO (ex: se idade for 20 e o ano atual for {ano_atual}, retorne 01/01/{ano_atual-20}).
+            - Se for uma dúvida, explicação de vacina ou qualquer outra coisa: OUTRO
             
             Resposta:
         """
@@ -646,7 +648,9 @@ def linguagem_natural(message):
         print(f"[LOG]: {intencao}")
 
         # Verifica se o modelo retornou uma data válida (formato DD/MM/AAAA)
-        padrao_data = r'^\d{2}/\d{2}/\d{4}$'
+        padrao_data = r'\b\d{2}/\d{2}/\d{4}\b'
+        match_data = re.search(padrao_data, intencao)
+        print(f"[LOG]: {match_data}]")
 
         # Passo 2: Roteamento baseado na resposta
         if "DASHBOARD" in intencao:
@@ -661,7 +665,8 @@ def linguagem_natural(message):
             servicos(message)
             return
             
-        elif re.match(padrao_data, intencao):
+        elif match_data:
+            data_encontrada = match_data.group(0)
             # Se o modelo retornou uma data, é porque ele processou a Data ou a Idade
             # Cria o objeto FakeMessage e chama o processar_dados
             class FakeMessage:
@@ -670,10 +675,11 @@ def linguagem_natural(message):
                     self.chat = original_message.chat
                     self.message_id = original_message.message_id  # Essencial para reply_to
                     
-            print(f"[LOG]: re.match")
-            fake_msg = FakeMessage(text=intencao, original_message=message)
-            print(f"[LOG]: FakeMessage = {fake_msg}")
-            processar_dados(fake_msg)
+            print(f"[LOG]: Data identificada: {data_encontrada}")
+            # fake_msg = FakeMessage(text=data_encontrada, original_message=message)
+            # print(f"[LOG]: FakeMessage = {fake_msg}")
+            processar_dados(data_encontrada)
+            return
             
             
         else:
