@@ -190,9 +190,6 @@ def buscar_cobertura_estado(estado):
         if alertas > 0:
             resposta += f"⚠️ Em atenção: <b>{alertas}</b>\n"
 
-        resposta += f"\n{barra}\n"
-        resposta += "<b>Detalhamento por vacina</b>\n"
-
         # Lista detalhada
         # Percorre todas vacinas e calcula percentuais
         for coluna in df.columns:
@@ -216,16 +213,11 @@ def buscar_cobertura_estado(estado):
                     coluna_tratada = tratar_nome_vacina(coluna)
                     coluna_segura = html.escape(coluna_tratada)
 
-                    # define se precisa quebrar linha (nomes longos)
-                    resposta += "<b>Indicadores gerais</b>\n"
-                    resposta += f"Média de cobertura: <b>{media}%</b>\n"
-
-
                     resposta += f"\n{barra}\n"
                     resposta += "<b>Detalhamento por vacina</b>\n"
 
                     resposta += f"{cor} {coluna_segura}: \n"
-                    resposta += f"<b>{percentual}%</b> {status}\n\n"
+                    resposta += f"<b>{percentual}%</b> {status}\n"
 
         # fechamento
         resposta += f"\n{barra}\n"

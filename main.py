@@ -19,12 +19,23 @@ from src.scrap_cobertura import (
     buscar_cobertura_municipio,
     calcular_media_estados,
     baixar_e_tratar_dados,
+    estados
 )
 from src.buscar_postos import buscar_postos_proximos,threading_search,start_drivers
 import src.notify as notify
 from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo, definir_categoria_por_idade, converter_periodo_para_meses, validar_data
 from src.audio_handler import processar_audio
 from src.tools.tools import tools
+from src.classificador import classificar_intencao
+from src.extrator import (
+    extrair_ano,
+    extrair_data,
+    extrair_idade,
+    idade_para_data,
+    extrair_idade_meses, meses_para_data,
+    extrair_estado
+)
+
 # 1. Configurações Iniciais
 load_dotenv()
 TOKEN = os.getenv('TOKEN_BOT')
@@ -348,15 +359,11 @@ def processar_dados(msg):
             servicos(msg)
             return
 
-        # Filtro para crianças
-        if idade_anos < 12:
-            idade_meses_total = (idade_anos * 12) + (hoje.month - data_nascimento.month)
-            vacinas_exibicao = [
-                v for v in dados_vacinas
-                if converter_periodo_para_meses(v['periodo']) >= idade_meses_total
-            ]
-        else:
-            vacinas_exibicao = dados_vacinas
+        idade_meses_total = (idade_anos * 12) + (hoje.month - data_nascimento.month)
+        vacinas_exibicao = [
+            v for v in dados_vacinas
+            if converter_periodo_para_meses(v['periodo']) >= idade_meses_total
+        ]
 
         user_states[msg.chat.id] = {
             'data_nasc': data_nascimento,
@@ -608,107 +615,210 @@ def faq_reactions(msg):
     bot.send_message(msg.chat.id, "Febre Leve e Cansaço de 3 dias no máximo",
     reply_markup=markup, parse_mode="Markdown")
 
+class FakeMessage:
+    def __init__(self, text, original):
+        self.text = text
+        self.chat = original.chat
+        self.message_id = original.message_id
+
+
+# Função para resolver estado + município quando o usuário só fornece o município
+def resolver_estado_municipio(msg):
+    uf = extrair_estado(msg.text)
+    municipio = user_states.get(msg.chat.id, {}).get("municipio_pendente")
+
+    if not uf:
+        bot.send_message(msg.chat.id, "Não reconheci o estado. Tente com a sigla (ex: SP).")
+        bot.register_next_step_handler(msg, resolver_estado_municipio)
+        return
+
+    user_states.pop(msg.chat.id, None)
+    resposta = buscar_cobertura_municipio(uf, municipio)
+    bot.send_message(msg.chat.id, resposta, parse_mode="HTML")
+
 # LLM
 @bot.message_handler(func=lambda m: True)
 def linguagem_natural(message):
     texto_usuario = message.text.strip()
 
-    # --- TRAVA DE SEGURANÇA PARA INPUTS CURTOS (Opcional, poupa processamento) ---
-    texto_min = texto_usuario.lower()
-    if texto_min in ["oi", "olá", "ola", "tudo bem", "tudo bem?", "bom dia", "boa tarde", "boa noite"]:
-        servicos(message)
+    # Atalhos por texto exato — evita chamar o LLM pra botões digitados manualmente
+    atalhos = {
+        "unidades próximas": pedir_localizacao,
+        "ubs próximas": pedir_localizacao,
+        "ubs": pedir_localizacao,
+        "vacinas": filtrar_pesquisa,
+        "faq": faq_menu,
+        "início": resposta_inicio,
+        "inicio": resposta_inicio,
+        "voltar ao menu principal": voltar,
+        "encerrar": finalizar_servico,
+        "continuar": continuar,
+    }
+    if texto_usuario.lower() in atalhos:
+        atalhos[texto_usuario.lower()](message)
         return
 
     try:
-        # Passo 1: Perguntar ao modelo qual é a intenção real do usuário
-        print(f"[LOG]: {datetime.now().year}")
-        ano_atual = datetime.now().year
-        PROMPT_CLASSIFICADOR = f"""
-            Mensagem: "{texto_usuario}"
+        intencao = classificar_intencao(texto_usuario)
+        print(f"[INTENCAO] {intencao}")
 
-            Analise a mensagem do usuário e classifique a intenção retornando APENAS UMA das opções abaixo. Não adicione nenhuma outra palavra.
+        # Corrige COBERTURA_ESTADO → MUNICIPIO se sobrar texto além do estado
+        if intencao == "COBERTURA_ESTADO":
+            uf = extrair_estado(texto_usuario)
+            if uf:
+                teste = texto_usuario
+                for sw in [r'\bcobertura\b', r'\bvacinal\b', r'\bde\b', r'\bda\b', r'\bdo\b', r'\bem\b']:
+                    teste = re.sub(sw, ' ', teste, flags=re.IGNORECASE)
+                teste = re.sub(rf'\b{re.escape(uf)}\b', ' ', teste, flags=re.IGNORECASE)
+                nome_estado = estados.get(uf, "")
+                if nome_estado:
+                    teste = re.sub(rf'\b{re.escape(nome_estado)}\b', ' ', teste, flags=re.IGNORECASE)
+                teste = re.sub(r'\s+', ' ', teste).strip()
+                if teste:
+                    intencao = "COBERTURA_MUNICIPIO"
 
-            - Se a mensagem pedir gráficos, estatísticas ou dados: DASHBOARD
-            - Se a mensagem pedir localização de postos/UBS: LOCALIZACAO
-            - Se a mensagem pedir ajuda ou o menu inicial: MENU
-            - Se a mensagem contiver UMA DATA de nascimento explícita (ex: 12/05/1990): retorne APENAS a data no formato DD/MM/AAAA
-            - Se a mensagem contiver UMA IDADE (ex: "tenho 20 anos", "nasci há 30 anos"): subtraia a idade do ano atual ({ano_atual}) e retorne APENAS a data de nascimento no formato 01/01/ANO (ex: se idade for 20 e o ano atual for {ano_atual}, retorne 01/01/{ano_atual-20}).
-            - Se for uma dúvida, explicação de vacina ou qualquer outra coisa: OUTRO
-            
-            Resposta:
-        """
+        # --- a partir daqui, TUDO elif ---
 
-        classificacao_resp = ollama.chat(
-            model="llama3.2:latest",
-            messages=[{"role": "user", "content": PROMPT_CLASSIFICADOR}]
-        )
-        
-        # Limpa completamente a resposta para evitar quebra de strings
-        intencao = classificacao_resp["message"]["content"].strip().upper()
-        print(f"[LOG]: {intencao}")
-
-        # Verifica se o modelo retornou uma data válida (formato DD/MM/AAAA)
-        padrao_data = r'\b\d{2}/\d{2}/\d{4}\b'
-        match_data = re.search(padrao_data, intencao)
-        print(f"[LOG]: {match_data}]")
-
-        # Passo 2: Roteamento baseado na resposta
-        if "DASHBOARD" in intencao:
-            dashboard(message)
-            return
-            
-        elif "LOCALIZACAO" in intencao:
-            pedir_localizacao(message)
-            return
-            
-        elif "MENU" in intencao:
+        if intencao == "MENU":
             servicos(message)
-            return
-            
-        elif match_data:
-            data_encontrada = match_data.group(0)
-            # Se o modelo retornou uma data, é porque ele processou a Data ou a Idade
-            # Cria o objeto FakeMessage e chama o processar_dados
-            class FakeMessage:
-                def __init__(self, text, original_message):
-                    self.text = text
-                    self.chat = original_message.chat
-                    self.message_id = original_message.message_id  # Essencial para reply_to
-                    
-            print(f"[LOG]: Data identificada: {data_encontrada}")
-            # fake_msg = FakeMessage(text=data_encontrada, original_message=message)
-            # print(f"[LOG]: FakeMessage = {fake_msg}")
-            processar_dados(data_encontrada)
-            return
-            
-            
-        else:
-            # Se for TEXTO ou qualquer fallback, responde puramente em texto comum
-            resposta_direta = ollama.chat(
+
+        elif intencao == "FAQ":
+            resposta = ollama.chat(
                 model="llama3.2:latest",
                 messages=[
                     {
-                        "role": "system", 
-                        "content": (
-                            "Você é o Assistente Gotinha, um assistente virtual especializado em vacinação e saúde. "
-                            "Responda à dúvida do usuário de forma humana, muito curta, clara e direta. "
-                            "Não invente dados médicos se não souber."
-                        )
+                        "role": "system",
+                        "content": """Você é o Assistente Gotinha, especialista em vacinação e saúde básica.
+
+Responda perguntas sobre vacinação, imunização, reações e efeitos colaterais, cuidados antes e depois de vacinar,
+documentos necessários, campanhas do SUS, imunidade, e saúde geral relacionada a vacinas.
+
+Responda em português, de forma clara, resumida e acolhedora.
+Resuma a resposta em no máximo 5 linhas, focando na informação mais relevante para o usuário.
+Se não tiver relação com saúde ou vacinação, diga: "Posso ajudar apenas com assuntos relacionados à vacinação e saúde."
+"""
                     },
                     {"role": "user", "content": texto_usuario}
                 ]
             )
-            
-            conteudo_resposta = resposta_direta["message"].get("content", "").strip()
-            
-            if conteudo_resposta:
-                bot.reply_to(message, conteudo_resposta)
-            else:
-                bot.reply_to(message, "Estou aqui! Como posso te ajudar com suas vacinas hoje? Se quiser ver minhas opções, digite 'Início'.")
+            bot.reply_to(message, resposta["message"]["content"])
+
+        elif intencao == "LOCALIZACAO":
+            pedir_localizacao(message)
+
+        elif intencao == "RANKING_ESTADOS":
+            resposta = calcular_media_estados()
+            bot.send_message(message.chat.id, resposta, parse_mode="HTML")
+
+        elif intencao == "COBERTURA_ESTADO":
+            uf = extrair_estado(texto_usuario)
+            if not uf:
+                bot.send_message(message.chat.id, "Informe o estado desejado (ex: SP, São Paulo).")
+                return
+            resposta = buscar_cobertura_estado(uf)
+            bot.send_message(message.chat.id, resposta, parse_mode="HTML")
+
+        elif intencao == "COBERTURA_MUNICIPIO":
+            uf = extrair_estado(texto_usuario)
+
+            STOPWORDS = [
+                r'\bcobertura\b', r'\bvacinal\b', r'\bvacinação\b', r'\bvacinacao\b',
+                r'\bquero\b', r'\bsaber\b', r'\bqual\b', r'\bcidade\b',
+                r'\bgostaria\b', r'\bcomo\b', r'\bestá\b',
+                r'\bmunicípio\b', r'\bmunicipio\b',
+                r'\bde\b', r'\bda\b', r'\bdo\b', r'\bdas\b',
+                r'\bem\b', r'\bno\b', r'\bna\b', r'\ba\b', r'\bo\b',
+            ]
+
+            municipio = texto_usuario
+            for sw in STOPWORDS:
+                municipio = re.sub(sw, ' ', municipio, flags=re.IGNORECASE)
+
+            if uf:
+                municipio = re.sub(rf'\b{re.escape(uf)}\b', ' ', municipio, flags=re.IGNORECASE)
+                nome_estado = estados.get(uf, "")
+                if nome_estado:
+                    municipio = re.sub(rf'\b{re.escape(nome_estado)}\b', ' ', municipio, flags=re.IGNORECASE)
+
+            municipio = re.sub(r'\s+', ' ', municipio).strip()
+
+            if not uf:
+                user_states[message.chat.id] = {"municipio_pendente": municipio}
+                bot.send_message(message.chat.id, f"De qual estado é {municipio}? (ex: SP)")
+                bot.register_next_step_handler(message, resolver_estado_municipio)
+                return
+
+            resposta = buscar_cobertura_municipio(uf, municipio)
+            bot.send_message(message.chat.id, resposta, parse_mode="HTML")
+
+        elif intencao == "VACINA_GRUPO":
+            grupos_map = {
+                "criança": "crianca", "crianca": "crianca",
+                "adolescente": "adolescente",
+                "adulto": "adulto",
+                "idoso": "idoso",
+                "gestante": "gestante"
+            }
+            grupo = None
+            texto_lower = texto_usuario.lower()
+            for chave, valor in grupos_map.items():
+                if chave in texto_lower:
+                    grupo = valor
+                    break
+
+            if not grupo:
+                bot.send_message(message.chat.id, "Qual grupo? (criança, adolescente, adulto, idoso, gestante)")
+                return
+
+            dados_vacinais = scrap(grupo)
+            user_states[message.chat.id] = {
+                "data_nasc": datetime.now(),
+                "vacinas": dados_vacinais,
+                "selecionadas": []
+            }
+            mostrar_vacinas_checklist(message.chat.id)
+
+        elif intencao == "VACINA_IDADE":
+            data = extrair_data(texto_usuario)
+            if data:
+                processar_dados(FakeMessage(data, message))
+                return
+
+            ano = extrair_ano(texto_usuario)
+            if ano:
+                processar_dados(FakeMessage(f"01/01/{ano}", message))
+                return
+
+            idade = extrair_idade(texto_usuario)
+            if idade is not None:
+                processar_dados(FakeMessage(idade_para_data(idade), message))
+                return
+
+            meses = extrair_idade_meses(texto_usuario)
+            if meses is not None:
+                processar_dados(FakeMessage(meses_para_data(meses), message))
+                return
+
+            bot.send_message(message.chat.id, "Informe a idade ou data de nascimento (ex: 5 anos, 3 meses, 10/04/2020).")
+
+        elif intencao == "FORA_DO_ESCOPO":
+            bot.reply_to(message,
+                "💉 Sou o Assistente Gotinha.\n\n"
+                "Posso ajudar apenas com:\n\n"
+                "• Vacinas por idade\n"
+                "• Vacinas por grupo\n"
+                "• Cobertura vacinal\n"
+                "• Ranking dos estados\n"
+                "• UBS próximas\n"
+                "• Dúvidas sobre vacinação"
+            )
+
+        else:
+            bot.reply_to(message, "Não consegui entender sua solicitação.")
 
     except Exception as e:
-        print(f"[ERRO LLM LINGUAGEM NATURAL] {e}")
-        bot.reply_to(message, "⚠️ Desculpe, tive um pequeno problema ao processar sua mensagem. Poderia tentar novamente?")@bot.message_handler(func=lambda m: True)
+        print(f"[ERRO] {e}")
+        bot.reply_to(message, "⚠️ Ocorreu um erro ao processar sua solicitação.")
 
 
 if __name__ == "__main__":
