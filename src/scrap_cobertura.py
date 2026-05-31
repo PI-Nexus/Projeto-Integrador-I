@@ -394,9 +394,12 @@ def buscar_cobertura_municipio(estado, municipio):
     resposta += f"\n{barra}\n"
     resposta += "Cobertura ideal recomendada: <b>acima de 90%</b>\n"
 
+    global info_atualizacao_global
+
     if info_atualizacao_global:
         resposta += f"\n{barra}\n"
-        resposta += f"{info_atualizacao_global}\nFonte: RNDS\n"
+        resposta += "<b>Ùltima atualização dos dados</b>\n"
+        resposta += f"{info_atualizacao_global} \nFonte: Rede Nacional de Dados em Saúde (RNDS)\n"
 
     return resposta
 
@@ -464,10 +467,10 @@ def calcular_media_estados():
     resposta += f"\n{barra}\n"
     resposta += f"<b>Média geral Brasil: {media_geral}%</b>\n"
 
+    global info_atualizacao_global
     if info_atualizacao_global:
         resposta += f"\n{barra}\n"
-        resposta += f"{info_atualizacao_global}\nFonte: RNDS\n"
+        resposta += "<b>Ùltima atualização dos dados</b>\n"
+        resposta += f"{info_atualizacao_global} \nFonte: Rede Nacional de Dados em Saúde (RNDS)\n"
 
     return resposta
-
-

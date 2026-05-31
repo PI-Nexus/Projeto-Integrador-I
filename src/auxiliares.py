@@ -49,12 +49,17 @@ def calcular_data_alvo(data_nascimento, periodo_str):
     return None
 
 def converter_periodo_para_meses(texto):
-    """Retorna o início do período em meses."""
     texto = texto.lower()
+
+    # Períodos especiais — início da vida
+    if any(p in texto for p in ["nascer", "nascimento", "< 30 dias", "<= 1 dia", "<= 2 dias"]):
+        return 0
+
     numeros = [int(s) for s in re.findall(r'\d+', texto)]
     if not numeros:
         return 0
-    valor = numeros[0]  # pega o primeiro número (início do período)
+
+    valor = numeros[0]
     if "ano" in texto:
         return valor * 12
     if "mês" in texto or "mes" in texto:
