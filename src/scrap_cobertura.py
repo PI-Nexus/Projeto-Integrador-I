@@ -190,9 +190,6 @@ def buscar_cobertura_estado(estado):
         if alertas > 0:
             resposta += f"⚠️ Em atenção: <b>{alertas}</b>\n"
 
-        resposta += f"\n{barra}\n"
-        resposta += "<b>Detalhamento por vacina</b>\n"
-
         # Lista detalhada
         # Percorre todas vacinas e calcula percentuais
         for coluna in df.columns:
@@ -216,16 +213,11 @@ def buscar_cobertura_estado(estado):
                     coluna_tratada = tratar_nome_vacina(coluna)
                     coluna_segura = html.escape(coluna_tratada)
 
-                    # define se precisa quebrar linha (nomes longos)
-                    resposta += "<b>Indicadores gerais</b>\n"
-                    resposta += f"Média de cobertura: <b>{media}%</b>\n"
-
-
                     resposta += f"\n{barra}\n"
                     resposta += "<b>Detalhamento por vacina</b>\n"
 
                     resposta += f"{cor} {coluna_segura}: \n"
-                    resposta += f"<b>{percentual}%</b> {status}\n\n"
+                    resposta += f"<b>{percentual}%</b> {status}\n"
 
         # fechamento
         resposta += f"\n{barra}\n"
@@ -402,9 +394,12 @@ def buscar_cobertura_municipio(estado, municipio):
     resposta += f"\n{barra}\n"
     resposta += "Cobertura ideal recomendada: <b>acima de 90%</b>\n"
 
+    global info_atualizacao_global
+
     if info_atualizacao_global:
         resposta += f"\n{barra}\n"
-        resposta += f"{info_atualizacao_global}\nFonte: RNDS\n"
+        resposta += "<b>Ùltima atualização dos dados</b>\n"
+        resposta += f"{info_atualizacao_global} \nFonte: Rede Nacional de Dados em Saúde (RNDS)\n"
 
     return resposta
 
@@ -472,10 +467,10 @@ def calcular_media_estados():
     resposta += f"\n{barra}\n"
     resposta += f"<b>Média geral Brasil: {media_geral}%</b>\n"
 
+    global info_atualizacao_global
     if info_atualizacao_global:
         resposta += f"\n{barra}\n"
-        resposta += f"{info_atualizacao_global}\nFonte: RNDS\n"
+        resposta += "<b>Ùltima atualização dos dados</b>\n"
+        resposta += f"{info_atualizacao_global} \nFonte: Rede Nacional de Dados em Saúde (RNDS)\n"
 
     return resposta
-
-

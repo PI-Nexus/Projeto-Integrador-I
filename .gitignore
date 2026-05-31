@@ -4,5 +4,4 @@ data/
 .idea/
 Unidade_basica_de_saude.csv
 data/scrap.txt
-data/agendamentos.jsonvenv/
-venv/
+data/agendamentos.json
