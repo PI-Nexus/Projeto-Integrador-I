@@ -19,6 +19,7 @@ from src.scrap_cobertura import (
     buscar_cobertura_municipio,
     calcular_media_estados,
     baixar_e_tratar_dados,
+    estados
 )
 from src.buscar_postos import buscar_postos_proximos,threading_search,start_drivers
 import src.notify as notify
@@ -26,6 +27,15 @@ from src.auxiliares import gerar_botoes_vacinas, calcular_data_alvo, definir_cat
 from src.audio_handler import processar_audio
 from src.tools.tools import tools
 from src.google_calendar import gerar_link_google_calendar
+from src.classificador import classificar_intencao
+from src.extrator import (
+    extrair_ano,
+    extrair_data,
+    extrair_idade,
+    idade_para_data,
+    extrair_idade_meses, meses_para_data,
+    extrair_estado
+)
 
 # 1. Configurações Iniciais
 load_dotenv()
@@ -347,15 +357,11 @@ def processar_dados(msg):
             servicos(msg)
             return
 
-        # Filtro para crianças
-        if idade_anos < 12:
-            idade_meses_total = (idade_anos * 12) + (hoje.month - data_nascimento.month)
-            vacinas_exibicao = [
-                v for v in dados_vacinas
-                if converter_periodo_para_meses(v['periodo']) >= idade_meses_total
-            ]
-        else:
-            vacinas_exibicao = dados_vacinas
+        idade_meses_total = (idade_anos * 12) + (hoje.month - data_nascimento.month)
+        vacinas_exibicao = [
+            v for v in dados_vacinas
+            if converter_periodo_para_meses(v['periodo']) >= idade_meses_total
+        ]
 
         user_states[msg.chat.id] = {
             'data_nasc': data_nascimento,
@@ -598,176 +604,225 @@ def servico_final(msg):
     markup.add('Encerrar', 'Continuar')
     bot.send_message(msg.chat.id, 'Deseja realizar outra consulta?', reply_markup=markup)
 
+@bot.message_handler(func=lambda msg: msg.text == "Documentos Necessários")
+def faq_documents(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add('Reações Comuns', 'Voltar ao Menu Principal')
+    bot.send_message(msg.chat.id, "Documento com Foto e Caderneta de Vacinação",
+    reply_markup=markup, parse_mode="Markdown")
+
+@bot.message_handler(func=lambda msg: msg.text == "Reações Comuns")
+def faq_reactions(msg):
+    markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    markup.add('Documentos Necessários', 'Voltar ao Menu Principal')
+    bot.send_message(msg.chat.id, "Febre Leve e Cansaço de 3 dias no máximo",
+    reply_markup=markup, parse_mode="Markdown")
+
+class FakeMessage:
+    def __init__(self, text, original):
+        self.text = text
+        self.chat = original.chat
+        self.message_id = original.message_id
+
+
+# Função para resolver estado + município quando o usuário só fornece o município
+def resolver_estado_municipio(msg):
+    uf = extrair_estado(msg.text)
+    municipio = user_states.get(msg.chat.id, {}).get("municipio_pendente")
+
+    if not uf:
+        bot.send_message(msg.chat.id, "Não reconheci o estado. Tente com a sigla (ex: SP).")
+        bot.register_next_step_handler(msg, resolver_estado_municipio)
+        return
+
+    user_states.pop(msg.chat.id, None)
+    resposta = buscar_cobertura_municipio(uf, municipio)
+    bot.send_message(msg.chat.id, resposta, parse_mode="HTML")
+
 # LLM
 @bot.message_handler(func=lambda m: True)
 def linguagem_natural(message):
+    texto_usuario = message.text.strip()
 
-    response = ollama.chat(
-        model="llama3.2:latest",
+    # Atalhos por texto exato — evita chamar o LLM pra botões digitados manualmente
+    atalhos = {
+        "unidades próximas": pedir_localizacao,
+        "ubs próximas": pedir_localizacao,
+        "ubs": pedir_localizacao,
+        "vacinas": filtrar_pesquisa,
+        "faq": faq_menu,
+        "início": resposta_inicio,
+        "inicio": resposta_inicio,
+        "voltar ao menu principal": voltar,
+        "encerrar": finalizar_servico,
+        "continuar": continuar,
+    }
+    if texto_usuario.lower() in atalhos:
+        atalhos[texto_usuario.lower()](message)
+        return
 
-        messages=[
-            {
-    "role": "system",
-    "content": """
-    Você é o Assistente Gotinha,
-    um assistente especializado em vacinação,
-    saúde pública e orientação vacinal.
+    try:
+        intencao = classificar_intencao(texto_usuario)
+        print(f"[INTENCAO] {intencao}")
 
-    Seu objetivo é:
-    - ajudar usuários sobre vacinas
-    - explicar doenças
-    - orientar sobre campanhas
-    - orientar sobre calendário vacinal
-    - explicar efeitos colaterais comuns
-    - orientar localização de UBS
-    - orientar cobertura vacinal
+        # Corrige COBERTURA_ESTADO → MUNICIPIO se sobrar texto além do estado
+        if intencao == "COBERTURA_ESTADO":
+            uf = extrair_estado(texto_usuario)
+            if uf:
+                teste = texto_usuario
+                for sw in [r'\bcobertura\b', r'\bvacinal\b', r'\bde\b', r'\bda\b', r'\bdo\b', r'\bem\b']:
+                    teste = re.sub(sw, ' ', teste, flags=re.IGNORECASE)
+                teste = re.sub(rf'\b{re.escape(uf)}\b', ' ', teste, flags=re.IGNORECASE)
+                nome_estado = estados.get(uf, "")
+                if nome_estado:
+                    teste = re.sub(rf'\b{re.escape(nome_estado)}\b', ' ', teste, flags=re.IGNORECASE)
+                teste = re.sub(r'\s+', ' ', teste).strip()
+                if teste:
+                    intencao = "COBERTURA_MUNICIPIO"
 
-    Regras:
-    - responda de forma clara
-    - responda de forma humana
-    - seja curto e objetivo
-    - não invente informações médicas
-    - use ferramentas quando necessário
+        # --- a partir daqui, TUDO elif ---
 
-    Ferramentas disponíveis:
+        if intencao == "MENU":
+            servicos(message)
 
-    - pedir_localizacao:
-      usar para UBS próximas
+        elif intencao == "FAQ":
+            resposta = ollama.chat(
+                model="llama3.2:latest",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": """Você é o Assistente Gotinha, especialista em vacinação e saúde básica.
 
-    - servicos:
-      usar para abrir menu principal
+Responda perguntas sobre vacinação, imunização, reações e efeitos colaterais, cuidados antes e depois de vacinar,
+documentos necessários, campanhas do SUS, imunidade, e saúde geral relacionada a vacinas.
 
-    - escolher_regiao:
-      usar para cobertura vacinal
+Responda em português, de forma clara, resumida e acolhedora.
+Resuma a resposta em no máximo 5 linhas, focando na informação mais relevante para o usuário.
+Se não tiver relação com saúde ou vacinação, diga: "Posso ajudar apenas com assuntos relacionados à vacinação e saúde."
+"""
+                    },
+                    {"role": "user", "content": texto_usuario}
+                ]
+            )
+            bot.reply_to(message, resposta["message"]["content"])
 
-    - dashboard:
-      usar para Power BI e gráficos
+        elif intencao == "LOCALIZACAO":
+            pedir_localizacao(message)
 
-    - processar_dados:
-      usar quando o usuário informar data de nascimento
+        elif intencao == "RANKING_ESTADOS":
+            resposta = calcular_media_estados()
+            bot.send_message(message.chat.id, resposta, parse_mode="HTML")
 
-    - comandos:
-      usar para início e ajuda
-    """
-    },
+        elif intencao == "COBERTURA_ESTADO":
+            uf = extrair_estado(texto_usuario)
+            if not uf:
+                bot.send_message(message.chat.id, "Informe o estado desejado (ex: SP, São Paulo).")
+                return
+            resposta = buscar_cobertura_estado(uf)
+            bot.send_message(message.chat.id, resposta, parse_mode="HTML")
 
-            {
-                "role": "user",
-                "content": message.text
-            }
-        ],
+        elif intencao == "COBERTURA_MUNICIPIO":
+            uf = extrair_estado(texto_usuario)
 
-        tools=tools
-    )
+            STOPWORDS = [
+                r'\bcobertura\b', r'\bvacinal\b', r'\bvacinação\b', r'\bvacinacao\b',
+                r'\bquero\b', r'\bsaber\b', r'\bqual\b', r'\bcidade\b',
+                r'\bgostaria\b', r'\bcomo\b', r'\bestá\b',
+                r'\bmunicípio\b', r'\bmunicipio\b',
+                r'\bde\b', r'\bda\b', r'\bdo\b', r'\bdas\b',
+                r'\bem\b', r'\bno\b', r'\bna\b', r'\ba\b', r'\bo\b',
+            ]
 
-    msg = response["message"]
+            municipio = texto_usuario
+            for sw in STOPWORDS:
+                municipio = re.sub(sw, ' ', municipio, flags=re.IGNORECASE)
 
-    # TOOL CALLS
-    if msg.get("tool_calls"):
+            if uf:
+                municipio = re.sub(rf'\b{re.escape(uf)}\b', ' ', municipio, flags=re.IGNORECASE)
+                nome_estado = estados.get(uf, "")
+                if nome_estado:
+                    municipio = re.sub(rf'\b{re.escape(nome_estado)}\b', ' ', municipio, flags=re.IGNORECASE)
 
-        for tool in msg["tool_calls"]:
+            municipio = re.sub(r'\s+', ' ', municipio).strip()
 
-            try:
-
-                function_name = tool["function"]["name"]
-
-                # MENU / START
-                if function_name == "comandos":
-                    comandos(message)
-                    return
-
-                # MENU PRINCIPAL
-                elif function_name == "servicos":
-                    servicos(message)
-                    return
-
-                # LOCALIZAÇÃO
-                elif function_name == "pedir_localizacao":
-                    pedir_localizacao(message)
-                    return
-
-                # COBERTURA VACINAL
-                elif function_name == "escolher_regiao":
-                    escolher_regiao(message)
-                    return
-
-                # DASHBOARD
-                elif function_name == "dashboard":
-                    dashboard(message)
-                    return
-
-                # VACINAS POR IDADE
-                elif function_name == "processar_dados":
-
-                    argumentos = tool["function"].get(
-                        "arguments",
-                        {}
-                    )
-
-                    data_nascimento = argumentos.get(
-                        "data_nascimento"
-                    )
-
-                    if not data_nascimento:
-
-                        bot.reply_to(
-                            message,
-                            "⚠️ Não consegui identificar sua data de nascimento."
-                        )
-
-                        return
-
-                    # simulando mensagem do usuário
-                    class FakeMessage:
-
-                        def __init__(self, text, chat_id):
-
-                            self.text = text
-
-                            class Chat:
-
-                                def __init__(self, chat_id):
-                                    self.id = chat_id
-
-                            self.chat = Chat(chat_id)
-
-                    fake_msg = FakeMessage(
-                        text=data_nascimento,
-                        chat_id=message.chat.id
-                    )
-
-                    processar_dados(fake_msg)
-
-                    return
-
-            except Exception as e:
-
-                print(f"[ERRO TOOL CALL] {e}")
-
-                bot.reply_to(
-                    message,
-                    "⚠️ Ocorreu um erro ao processar sua solicitação."
-                )
-
+            if not uf:
+                user_states[message.chat.id] = {"municipio_pendente": municipio}
+                bot.send_message(message.chat.id, f"De qual estado é {municipio}? (ex: SP)")
+                bot.register_next_step_handler(message, resolver_estado_municipio)
                 return
 
-    # RESPOSTA NORMAL
-    if msg.get("content"):
+            resposta = buscar_cobertura_municipio(uf, municipio)
+            bot.send_message(message.chat.id, resposta, parse_mode="HTML")
 
-        bot.reply_to(
-            message,
-            msg["content"]
-        )
+        elif intencao == "VACINA_GRUPO":
+            grupos_map = {
+                "criança": "crianca", "crianca": "crianca",
+                "adolescente": "adolescente",
+                "adulto": "adulto",
+                "idoso": "idoso",
+                "gestante": "gestante"
+            }
+            grupo = None
+            texto_lower = texto_usuario.lower()
+            for chave, valor in grupos_map.items():
+                if chave in texto_lower:
+                    grupo = valor
+                    break
 
-    else:
+            if not grupo:
+                bot.send_message(message.chat.id, "Qual grupo? (criança, adolescente, adulto, idoso, gestante)")
+                return
 
-        bot.reply_to(
-            message,
-            "❓ Não consegui entender. Tente novamente."
-        )
+            dados_vacinais = scrap(grupo)
+            user_states[message.chat.id] = {
+                "data_nasc": datetime.now(),
+                "vacinas": dados_vacinais,
+                "selecionadas": []
+            }
+            mostrar_vacinas_checklist(message.chat.id)
 
+        elif intencao == "VACINA_IDADE":
+            data = extrair_data(texto_usuario)
+            if data:
+                processar_dados(FakeMessage(data, message))
+                return
 
-# EXECUÇÃO
+            ano = extrair_ano(texto_usuario)
+            if ano:
+                processar_dados(FakeMessage(f"01/01/{ano}", message))
+                return
+
+            idade = extrair_idade(texto_usuario)
+            if idade is not None:
+                processar_dados(FakeMessage(idade_para_data(idade), message))
+                return
+
+            meses = extrair_idade_meses(texto_usuario)
+            if meses is not None:
+                processar_dados(FakeMessage(meses_para_data(meses), message))
+                return
+
+            bot.send_message(message.chat.id, "Informe a idade ou data de nascimento (ex: 5 anos, 3 meses, 10/04/2020).")
+
+        elif intencao == "FORA_DO_ESCOPO":
+            bot.reply_to(message,
+                "💉 Sou o Assistente Gotinha.\n\n"
+                "Posso ajudar apenas com:\n\n"
+                "• Vacinas por idade\n"
+                "• Vacinas por grupo\n"
+                "• Cobertura vacinal\n"
+                "• Ranking dos estados\n"
+                "• UBS próximas\n"
+                "• Dúvidas sobre vacinação"
+            )
+
+        else:
+            bot.reply_to(message, "Não consegui entender sua solicitação.")
+
+    except Exception as e:
+        print(f"[ERRO] {e}")
+        bot.reply_to(message, "⚠️ Ocorreu um erro ao processar sua solicitação.")
+
 
 if __name__ == "__main__":
     bot.remove_webhook()
