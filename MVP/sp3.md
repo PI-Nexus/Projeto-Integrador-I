@@ -106,7 +106,7 @@ A API será expandida para incluir funcionalidades baseadas em **autenticação 
 | Sprint | Entregas Principais | Status |
 |--------|-------------------|--------|
 | 01 | Consulta por idade e grupo | Concluído |
-| 02 | Notificações, cobertura vacinal, busa por postos de saúde | Concluído |
+| 02 | Notificações, cobertura vacinal, busca por postos de saúde | Concluído |
 | 03 | Autenticação biométrica, integração Ollama, consultas inteligentes | Concluído |
 
 ---
