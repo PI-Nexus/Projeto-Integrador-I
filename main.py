@@ -316,7 +316,7 @@ def tratar_audio(msg):
 
         # FUNÇÃO — roteia para os handlers principais
         if valor == "inicio":
-            resposta_inicio(msg)
+            servicos(msg)
         elif valor == "cobertura_vacinal":
             menu_cobertura(msg)
         elif valor == "localizacao":
@@ -326,7 +326,7 @@ def tratar_audio(msg):
         elif valor == "fim":
             finalizar_servico(msg)
         else:
-            resposta_inicio(msg)
+            servicos(msg)
 
     except Exception as e:
         print(f"[tratar_audio] transcrição: '{transcricao}' | erro: {e}")
@@ -334,7 +334,7 @@ def tratar_audio(msg):
             msg.chat.id,
             "⚠️ Não consegui processar o áudio. Tente novamente ou use o menu de texto.",
         )
-        resposta_inicio(msg)
+        servicos(msg)
 
 # FLUXO DE VACINAS
 @bot.message_handler(func=lambda msg: msg.text == "Vacinas")

@@ -16,23 +16,18 @@ A base de dados é obtida via scraping de `https://www.gov.br/saude/pt-br/vacina
 * **Lucas (Jovem Adulto):** Não sabe quais vacinas de reforço deve tomar após sair da idade escolar.
 * **Sr. José (Idoso):** Busca um canal direto para saber sobre doses específicas para sua idade sem navegar em sites complexos.
 * **Clara (Gestante):** Precisa de clareza sobre quais imunizantes são obrigatórios e seguros durante a gestação.
-Beatriz (Universitária/Estudante da área da saúde): Quer entender os componentes ou a justificativa técnica de uma vacina específica (ex: a diferença entre a vacina da Gripe trivalente e quadrivalente) sem ter que ler artigos acadêmicos longos.
-
-Rodrigo (Pai preocupado com reações): O filho tomou a vacina de 2 meses e está com o braço vermelho e um pouco de febre. Ele precisa de uma orientação rápida e calma sobre se isso é normal ou se deve ir ao hospital.
-
-Dona Sônia (Leiga digital): Tem medo de fake news que recebe no WhatsApp sobre vacinas e quer um canal confiável para perguntar, em linguagem simples, se "tal vacina realmente funciona".
+* **Beatriz (Universitária/Estudante da área da saúde):** Quer entender os componentes ou a justificativa técnica de uma vacina específica (ex: a diferença entre a vacina da Gripe trivalente e quadrivalente) sem ter que ler artigos acadêmicos longos.
+* **Rodrigo (Pai preocupado com reações):** O filho tomou a vacina de 2 meses e está com o braço vermelho e um pouco de febre. Ele precisa de uma orientação rápida e calma sobre se isso é normal ou se deve ir ao hospital.
+* **Dona Sônia (Leiga digital):** Tem medo de fake news que recebe no WhatsApp sobre vacinas e quer um canal confiável para perguntar, em linguagem simples, se "tal vacina realmente funciona".
 
 ### 🩹 Dores que o Bot Resolve
 * **Complexidade de Dados:** O site oficial apresenta tabelas extensas; o bot filtra e entrega apenas o que é relevante para o perfil consultado.
 * **Cálculo de Faixa Etária:** Automatiza a conversão de "Data de Nascimento" para faixas de meses ou anos, evitando erros de interpretação do usuário.
 * **Acessibilidade:** Transforma uma busca técnica em uma conversa intuitiva, facilitando o acesso à saúde pública.
 Falta de Contexto e Explicação: Antes, o bot mostrava apenas o nome da vacina. Agora, a IA explica o que a vacina previne, reações comuns e orientações pós-vacina em tempo real.
-
-Medo de Efeitos Colaterais (Ansiedade): O bot atua como um primeiro filtro de suporte emocional e informativo, explicando sintomas comuns (como febre baixa ou dor no local da aplicação) para evitar pânico.
-
-Linguagem Muito Técnica: Transforma termos médicos complexos do Ministério da Saúde em respostas simples, diretas e acessíveis para qualquer cidadão.
-
-Barreira de Consultas Rígidas: O usuário não precisa mais seguir apenas botões estruturados; ele pode conversar textualmente com o bot para tirar dúvidas livres sobre imunização.
+* **Medo de Efeitos Colaterais (Ansiedade):** O bot atua como um primeiro filtro de suporte emocional e informativo, explicando sintomas comuns (como febre baixa ou dor no local da aplicação) para evitar pânico.
+* **Linguagem Muito Técnica:** Transforma termos médicos complexos do Ministério da Saúde em respostas simples, diretas e acessíveis para qualquer cidadão.
+* **Barreira de Consultas Rígidas:** O usuário não precisa mais seguir apenas botões estruturados; ele pode conversar textualmente com o bot para tirar dúvidas livres sobre imunização.
 
 ---
 
