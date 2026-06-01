@@ -63,8 +63,8 @@ O foco do projeto é o algoritmo, sem o uso de persistência de dados (Banco de 
 | 3   | Média      | Como usuário do assistente virtual, gostaria de receber notificações perto da data da próxima vacina para não me esquecer.     | 8          | 2      |
 | 4   | Média      | Como jornalista, gostaria de acessar os dados de cobertura vacinal da minha região para escrever uma matéria.     | 13          | 2      |
 | 5   | Média      | Como usuário do assistente, gostaria de consultar os postos de saúde próximos de mim     | 5          | 2      |
-| 6   | Baixa      | Como cidadão, gostaria de poder utilizar comandos de voz para fazer buscas no assistente virtual     | 13          | 3      |
-| 7   | Baixa      | Como adulto, gostaria de fazer consultas com o bot usando minhas próprias palavras     | 25          | 3      |
+| 6   | Baixa      | Como cidadão, gostaria de poder utilizar comandos de voz para fazer buscas no assistente virtual     | 8          | 3      |
+| 7   | Baixa      | Como adulto, gostaria de fazer consultas com o bot usando minhas próprias palavras     | 13          | 3      |
 
 ---
 

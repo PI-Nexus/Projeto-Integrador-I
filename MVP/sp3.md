@@ -50,8 +50,8 @@ A API será expandida para incluir funcionalidades baseadas em **autenticação 
 
 | ID  | User Story                                                                 | Prioridade | Estimativa |
 |-----|-----------------------------------------------------------------------------|------------|------------|
-| US6 |Como cidadão, gostaria de poder utilizar comandos de voz para fazer buscas no assistente virtual.       | Alta       | 8 pontos   |
-| US7 | Como adulto, gostaria de fazer consultas com o bot usando minhas próprias palavras      | Média      | 8 pontos   |
+| US6 | Como cidadão, gostaria de poder utilizar comandos de voz para fazer buscas no assistente virtual.       | Alta       | 8 pontos   |
+| US7 | Como adulto, gostaria de fazer consultas com o bot usando minhas próprias palavras      | Média      | 13 pontos   |
 
 ---
 
