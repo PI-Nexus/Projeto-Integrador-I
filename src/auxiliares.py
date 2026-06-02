@@ -49,13 +49,16 @@ def calcular_data_alvo(data_nascimento, periodo_str):
     return None
 
 def converter_periodo_para_meses(texto):
-    """Converte strings de tempo para um valor numérico em meses para comparação."""
     texto = texto.lower()
-    # Extrai o primeiro número que aparecer
-    numeros = [int(s) for s in texto.split() if s.isdigit()]
+
+    # Períodos especiais — início da vida
+    if any(p in texto for p in ["nascer", "nascimento", "< 30 dias", "<= 1 dia", "<= 2 dias"]):
+        return 0
+
+    numeros = [int(s) for s in re.findall(r'\d+', texto)]
     if not numeros:
         return 0
-    
+
     valor = numeros[0]
     if "ano" in texto:
         return valor * 12
@@ -67,9 +70,9 @@ def definir_categoria_por_idade(idade_anos):
     """Mapeia a idade exata para a categoria do PDF correta."""
     if idade_anos < 12:
         return "crianca"
-    elif 12 <= idade_anos < 19:
+    elif 12 <= idade_anos < 18:
         return "adolescente"
-    elif 20 <= idade_anos < 60:
+    elif 18 <= idade_anos < 60:
         return "adulto"
     else:
         return "idoso"
