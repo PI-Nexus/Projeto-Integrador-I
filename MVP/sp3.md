@@ -130,4 +130,4 @@ A API será expandida para incluir funcionalidades baseadas em **autenticação 
 ## 📂 Anexos / Evidências
 
 **Vídeo de Demonstração:**\
-Confira o bot em funcionamento (em andamento): ...
+Confira o bot em funcionamento: https://youtu.be/iXTgtZep5Qs?si=pl3JlPTr1WfIdQ78
